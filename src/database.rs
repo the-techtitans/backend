@@ -60,4 +60,20 @@ impl Database {
             .expect("Error in database");
         result
     }
+
+    pub async fn view_patient_info(&self, patient_id: i32) -> Vec<PatientInfo> {
+        let query = format!(
+            "
+                    select name, email, phone
+                    from patients
+                    where id = {}
+                    ;",
+            patient_id
+        );
+        let result = sqlx::query_as::<_, PatientInfo>(&query)
+            .fetch_all(&self.connection)
+            .await
+            .expect("Error in database");
+        result
+    }
 }

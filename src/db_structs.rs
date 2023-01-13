@@ -4,6 +4,19 @@ use sqlx::FromRow;
 use std::fmt::Display;
 use std::str::FromStr;
 
+//inputs; input JSON -> serde -> these structs
+#[derive(Deserialize)]
+pub struct PatientID {
+    #[serde(deserialize_with = "from_str")]
+    pub patient_id: i32,
+}
+
+#[derive(Deserialize)]
+pub struct City {
+    pub city: String,
+}
+
+//outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
 #[derive(FromRow, Serialize)]
 pub struct PrevAppointments {
     docname: String,
@@ -22,17 +35,14 @@ pub struct DoctorInfo {
     address: String,
 }
 
-#[derive(Deserialize)]
-pub struct PatientID {
-    #[serde(deserialize_with = "from_str")]
-    pub patient_id: i32,
+#[derive(FromRow, Serialize)]
+pub struct PatientInfo {
+    name: String,
+    email: String,
+    phone: String,
 }
 
-#[derive(Deserialize)]
-pub struct City {
-    pub city: String,
-}
-
+//function to convert the input string into a number with some Serde magic
 fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
     T: FromStr,
