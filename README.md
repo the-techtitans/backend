@@ -18,6 +18,6 @@ createdb <dbname you gave in DATABASE_URL>
 psql <dbname you gave in DATABASE_URL> -f src/schema.sql
 ```
 
-Feel free to add some dummy data at this stage.
+Feel free to add some dummy data at this stage or use the dummy data contained in ```src/dummydata.sql``` to get some sample data.
 
 Then, run the project using ```cargo run```. It will run on port 3000
