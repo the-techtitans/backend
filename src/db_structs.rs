@@ -9,7 +9,7 @@ pub struct PrevAppointments {
     docname: String,
     timestamp: String,
     apptype: String,
-    status: String,
+    appstatus: String,
     prescription: String,
     appname: String,
 }
