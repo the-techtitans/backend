@@ -15,10 +15,11 @@ pub async fn init() -> Option<Database> {
     match env::var("DATABASE_URL") {
         Ok(url) => {
             tracing::debug!("Found database URL: {}", url);
-            if let Ok(pool) = PgPoolOptions::new().max_connections(5).connect(&url).await {
+            if let Ok(pool) = PgPoolOptions::new().connect(&url).await {
                 tracing::debug!("Connected to database!");
                 return Some(Database { connection: pool });
             } else {
+                tracing::error!("Could not connect using URL {}", url);
                 return None;
             }
         }
@@ -51,7 +52,7 @@ impl Database {
                     select d.id as docid, d.name as docname, s.name as specname, d.address as address
                     from doctors d
                     join specialities s on s.id = d.speciality_id
-                    where d.city = {}
+                    where d.city = '{}'
                     ;", city);
         let result = sqlx::query_as::<_, DoctorInfo>(&query)
             .fetch_all(&self.connection)
