@@ -16,6 +16,12 @@ pub struct City {
     pub city: String,
 }
 
+#[derive(Deserialize)]
+pub struct CityApptype {
+    pub city: String,
+    pub apptype: String,
+}
+
 //outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
 #[derive(FromRow, Serialize)]
 pub struct PrevAppointments {
@@ -40,6 +46,14 @@ pub struct PatientInfo {
     name: String,
     email: String,
     phone: String,
+}
+
+#[derive(FromRow, Serialize)]
+pub struct DoctorPrices {
+    docname: String,
+    city: String,
+    address: String,
+    price: i32,
 }
 
 //function to convert the input string into a number with some Serde magic

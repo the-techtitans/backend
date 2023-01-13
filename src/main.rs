@@ -1,15 +1,14 @@
 use axum::{
+    extract::Query,
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
-use db_structs::{City, DoctorInfo, PatientID, PrevAppointments};
+use db_structs::*;
 use std::net::SocketAddr;
 use tokio;
 use tracing;
 use tracing_subscriber;
-
-use crate::db_structs::PatientInfo;
 
 mod database;
 mod db_structs;
@@ -22,7 +21,8 @@ async fn main() {
         .route("/", get(root))
         .route("/prevapp", post(prevapp))
         .route("/doctors", post(doctors))
-        .route("/patient", post(patient));
+        .route("/patient", post(patient))
+        .route("/find", get(find));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", addr);
@@ -72,6 +72,21 @@ async fn patient(Json(payload): Json<PatientID>) -> Response {
         Some(conn) => conn.view_patient_info(payload.patient_id).await,
         None => {
             let res: Vec<PatientInfo> = Vec::new();
+            res
+        }
+    };
+    Json(res).into_response()
+}
+
+async fn find(payload: Query<CityApptype>) -> Response {
+    tracing::debug!(
+        "Got request to view all doctors with appointment type {} in city {}",
+        payload.apptype, payload.city
+    );
+    let res = match database::init().await {
+        Some(conn) => conn.view_doctor_prices(&payload.city, &payload.apptype).await,
+        None => {
+            let res: Vec<DoctorPrices> = Vec::new();
             res
         }
     };

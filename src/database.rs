@@ -76,4 +76,31 @@ impl Database {
             .expect("Error in database");
         result
     }
+
+    pub async fn view_doctor_prices(&self, city: &String, apptype: &String) -> Vec<DoctorPrices> {
+        let iscityspecified = match city.is_empty() {
+            false => format!("and d.city = '{}'", city),
+            true => String::new(),
+        };
+        let isapptypespecified = match apptype.is_empty() {
+            false => format!("and t.name = '{}'", apptype),
+            true => String::new(),
+        };
+
+        let query = format!(
+            "
+                    select d.name as docname, d.city as city, d.address as address, p.price
+                    from doctors d
+                    join appointment_types t on d.speciality_id = t.speciality_id
+                    join appointment_prices p on d.id = p.doctor_id and t.id = p.appointment_type
+                    where 1=1 {} {};
+                    ",
+            isapptypespecified, iscityspecified
+        );
+        let result = sqlx::query_as::<_, DoctorPrices>(&query)
+            .fetch_all(&self.connection)
+            .await
+            .expect("Error in database");
+        result
+    }
 }
