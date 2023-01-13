@@ -3,13 +3,14 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use database::{PatientID, PrevAppointments, City, DoctorInfo};
+use db_structs::{PatientID, PrevAppointments, City, DoctorInfo};
 use std::net::SocketAddr;
 use tokio;
 use tracing;
 use tracing_subscriber;
 
 mod database;
+mod db_structs;
 
 #[tokio::main]
 async fn main() {
