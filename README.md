@@ -24,9 +24,9 @@ Then, run the project using ```cargo run```. It will run on port 3000
 
 ## Endpoints
 
-|URL| Type | Description | Parameters
----|---|---|---
-|/find| GET | Finds doctors in city specified who can give appointment for specified appointment type | city, apptype (both as queries in URL)
-|/prevapp | POST | Displays the previous appointments for particular patient | patient_id (POST request)
-|/doctors | POST | Displays doctors in a particular city | city (POST request)
-|/patient | POST | Displays info about patient | patient_id (POST request)
+|URL| Type | Description | Parameters | Authentication Needed?
+---|---|---|---|---
+|/find| GET | Finds doctors in city specified who can give appointment for specified appointment type | city, apptype (both as queries in URL) | No
+|/prevapp | POST | Displays the previous appointments for particular patient | patient_id (POST request) | Yes
+|/doctors | POST | Displays doctors in a particular city | city (POST request) | No
+|/patient | POST | Displays info about patient | patient_id (POST request) | Yes
