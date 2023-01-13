@@ -8,7 +8,9 @@ It is being written in Rust using [Axum web framework](https://lib.rs/crates/axu
 
 Make sure you have Postgres instance and Rust toolchain running on your system.
 
-First, populate ```.env``` with DATABASE_URL according to [PostgreSQL standards](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING).
+First, populate ```setup.env``` with DATABASE_URL according to [PostgreSQL standards](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING).
+
+Then, rename ```setup.env``` to anything that begins with .env, like ```.env```.
 
 Then, run the following commands related to creating the database and tables (one time measure to setup development environment):
 ```
