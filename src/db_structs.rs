@@ -53,6 +53,7 @@ pub struct DoctorPrices {
     docname: String,
     city: String,
     address: String,
+    apptype: String,
     price: i32,
 }
 

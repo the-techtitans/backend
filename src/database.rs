@@ -89,7 +89,7 @@ impl Database {
 
         let query = format!(
             "
-                    select d.name as docname, d.city as city, d.address as address, p.price
+                    select d.name as docname, d.city as city, d.address as address, t.name as apptype, p.price
                     from doctors d
                     join appointment_types t on d.speciality_id = t.speciality_id
                     join appointment_prices p on d.id = p.doctor_id and t.id = p.appointment_type
