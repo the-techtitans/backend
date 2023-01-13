@@ -33,12 +33,12 @@ pub async fn init() -> Option<Database> {
 impl Database {
     pub async fn view_prev_appointments(&self, patient_id: i32) -> Vec<PrevAppointments> {
         let query = format!("
-                    select d.name as docname, a.date_time as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
+                    select d.name as docname, TO_CHAR(a.date_time, 'YYYY/MM/DD HH12:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
                     from patients_previous_appointments a
                     join doctors d on d.id = a.doctor_id
                     join specialities p on p.id = a.appointment_type
                     where a.patient_id = {}
-                    order by a.date_time desc
+                    order by timestamp desc
                     ;", patient_id);
         let result = sqlx::query_as::<_, PrevAppointments>(&query)
             .fetch_all(&self.connection)
