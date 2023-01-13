@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use database::{PatientID, PrevAppointments};
+use database::{PatientID, PrevAppointments, City, DoctorInfo};
 use std::net::SocketAddr;
 use tokio;
 use tracing;
@@ -17,7 +17,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/prevapp", post(prevapp));
+        .route("/prevapp", post(prevapp))
+        .route("/doctors", post(doctors));
+
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", addr);
@@ -32,10 +34,23 @@ async fn root() -> String {
 }
 
 async fn prevapp(Json(payload): Json<PatientID>) -> Response {
+    tracing::debug!("Got request to view previous appointments for patient ID {}", payload.patient_id);
     let res = match database::init().await {
         Some(conn) => conn.view_prev_appointments(payload.patient_id).await,
         None => {
             let res: Vec<PrevAppointments> = Vec::new();
+            res
+        }
+    };
+    Json(res).into_response()
+}
+
+async fn doctors(Json(payload): Json<City>) -> Response {
+    tracing::debug!("Got request to view doctors in city {}", payload.city);
+    let res = match database::init().await {
+        Some(conn) => conn.view_same_city_doctors(payload.city).await,
+        None => {
+            let res: Vec<DoctorInfo> = Vec::new();
             res
         }
     };

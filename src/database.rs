@@ -1,5 +1,4 @@
 //create structs for interfacing with the database
-//use serde::{Deserialize, Serialize};
 use dotenvy::dotenv;
 use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
@@ -19,10 +18,23 @@ pub struct PrevAppointments {
     appname: String,
 }
 
+#[derive(sqlx::FromRow, Serialize)]
+pub struct DoctorInfo {
+    docid: i32,
+    docname: String,
+    specname: String,
+    address: String,
+}
+
 #[derive(Deserialize)]
 pub struct PatientID {
     #[serde(deserialize_with = "from_str")]
-    pub patient_id: u32,
+    pub patient_id: i32,
+}
+
+#[derive(Deserialize)]
+pub struct City {
+    pub city: String,
 }
 
 pub struct Database {
@@ -59,7 +71,8 @@ pub async fn init() -> Option<Database> {
 }
 
 impl Database {
-    pub async fn view_prev_appointments(&self, patient_id: u32) -> Vec<PrevAppointments> {
+
+    pub async fn view_prev_appointments(&self, patient_id: i32) -> Vec<PrevAppointments> {
         let query = format!("
                     select d.name as docname, a.date_time as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
                     from patients_previous_appointments a
@@ -74,4 +87,19 @@ impl Database {
             .expect("Error in database");
         result
     }
+
+    pub async fn view_same_city_doctors(&self, city: String) -> Vec<DoctorInfo> {
+        let query = format!("
+                    select d.id as docid, d.name as docname, s.name as specname, d.address as address
+                    from doctors d
+                    join specialities s on s.id = d.speciality_id
+                    where d.city = {}
+                    ;", city);
+        let result = sqlx::query_as::<_, DoctorInfo>(&query)
+            .fetch_all(&self.connection)
+            .await
+            .expect("Error in database");
+        result
+    }
+
 }
