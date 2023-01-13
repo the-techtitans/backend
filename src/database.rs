@@ -1,15 +1,15 @@
 //create structs for interfacing with the database
 //use serde::{Deserialize, Serialize};
 use dotenvy::dotenv;
-use serde::{Deserialize, Serialize};
 use serde::de::{self, Deserializer};
-use std::fmt::Display;
-use std::str::FromStr;
+use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::env;
+use std::fmt::Display;
+use std::str::FromStr;
 use tracing;
 
-#[derive(sqlx::FromRow,Serialize)]
+#[derive(sqlx::FromRow, Serialize)]
 pub struct PrevAppointments {
     docname: String,
     timestamp: String,
@@ -30,9 +30,10 @@ pub struct Database {
 }
 
 fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-    where T: FromStr,
-          T::Err: Display,
-          D: Deserializer<'de>
+where
+    T: FromStr,
+    T::Err: Display,
+    D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
     T::from_str(&s).map_err(de::Error::custom)
@@ -43,11 +44,7 @@ pub async fn init() -> Option<Database> {
     match env::var("DATABASE_URL") {
         Ok(url) => {
             tracing::debug!("Found database URL: {}", url);
-            if let Ok(pool) = PgPoolOptions::new()
-                .max_connections(5)
-                .connect(&url)
-                .await
-            {
+            if let Ok(pool) = PgPoolOptions::new().max_connections(5).connect(&url).await {
                 tracing::debug!("Connected to database!");
                 return Some(Database { connection: pool });
             } else {

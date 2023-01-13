@@ -1,5 +1,5 @@
 use axum::{
-    response::{Response, IntoResponse},
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
