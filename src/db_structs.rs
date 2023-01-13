@@ -1,8 +1,8 @@
+use serde::de::{self, Deserializer};
+use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use std::fmt::Display;
 use std::str::FromStr;
-use serde::de::{self, Deserializer};
-use serde::{Deserialize, Serialize};
 
 #[derive(FromRow, Serialize)]
 pub struct PrevAppointments {

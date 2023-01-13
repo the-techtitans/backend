@@ -30,7 +30,6 @@ pub async fn init() -> Option<Database> {
 }
 
 impl Database {
-
     pub async fn view_prev_appointments(&self, patient_id: i32) -> Vec<PrevAppointments> {
         let query = format!("
                     select d.name as docname, a.date_time as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
@@ -60,5 +59,4 @@ impl Database {
             .expect("Error in database");
         result
     }
-
 }
