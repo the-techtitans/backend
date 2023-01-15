@@ -12,6 +12,13 @@ pub struct PatientID {
 }
 
 #[derive(Deserialize)]
+pub struct Patient {
+    pub name: String,
+    pub email: String,
+    pub phone: String,
+}
+
+#[derive(Deserialize)]
 pub struct City {
     pub city: String,
 }

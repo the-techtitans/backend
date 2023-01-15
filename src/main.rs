@@ -1,4 +1,5 @@
 use axum::{
+    http::StatusCode,
     extract::Query,
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -22,7 +23,8 @@ async fn main() {
         .route("/prevapp", post(prevapp))
         .route("/doctors", post(doctors))
         .route("/patient", post(patient))
-        .route("/find", get(find));
+        .route("/find", get(find))
+        .route("/newpatient", post(newpatient));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", addr);
@@ -91,4 +93,23 @@ async fn find(payload: Query<CityApptype>) -> Response {
         }
     };
     Json(res).into_response()
+}
+
+async fn newpatient(Json(payload): Json<Patient>) -> Response {
+    tracing::debug!(
+        "Got request to insert new patient info"
+    );
+    match database::init().await {
+        Some(conn) => {
+            let res = conn.add_new_patient(&payload.name, &payload.email, &payload.phone).await;
+            if res {
+                return (StatusCode::OK, Json("Inserted")).into_response();
+            } else {
+                return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            }
+        }
+        None => {
+            return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+        }
+    }
 }
