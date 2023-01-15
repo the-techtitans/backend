@@ -33,3 +33,4 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/newpatient | POST | Adds patient details to database | name, phone, email | Will be used for signup process
 |/specialities | GET | Gets speciality details | Nothing | No
 |/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address | Will be used for signup process
+|/newappointment | POST | Add new appointment to database | doctor_id, patient_id, apptype (as an ID), datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS), phyorvirt (just write either physical or virtual checkup), status (cancelled, fulfilled, scheduled), prescription | Yes
