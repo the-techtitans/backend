@@ -32,3 +32,4 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/patient | POST | Displays info about patient | patient_id (POST request) | Yes
 |/newpatient | POST | Adds patient details to database | name, phone, email | Will be used for signup process
 |/specialities | GET | Gets speciality details | Nothing | No
+|/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address | Will be used for signup process
