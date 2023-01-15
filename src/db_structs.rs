@@ -38,6 +38,20 @@ pub struct CityApptype {
     pub apptype: String,
 }
 
+#[derive(Deserialize)]
+pub struct Appointment {
+    #[serde(deserialize_with = "from_str")]
+    pub doctor_id: i64,
+    #[serde(deserialize_with = "from_str")]
+    pub patient_id: i64,
+    #[serde(deserialize_with = "from_str")]
+    pub apptype: i64,
+    pub datetime: String,
+    pub phyorvirt: String,
+    pub status: String,
+    pub prescription: String,
+}
+
 //outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
 #[derive(FromRow, Serialize)]
 pub struct PrevAppointments {

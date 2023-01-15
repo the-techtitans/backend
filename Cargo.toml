@@ -13,3 +13,4 @@ sqlx = { version = "0.6.2", features = ["postgres", "runtime-tokio-native-tls"]}
 tracing = "0.1.37"
 tracing-subscriber = "0.3"
 dotenvy = "0.15.6"
+chrono = "0.4"

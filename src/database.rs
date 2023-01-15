@@ -3,6 +3,7 @@ use dotenvy::dotenv;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::env;
 use tracing;
+use chrono::NaiveDateTime;
 
 use crate::db_structs::*;
 
@@ -128,6 +129,17 @@ impl Database {
         let query = format!("
                     insert into doctors(name, speciality_id, city, address) values ('{}','{}','{}', '{}');
                             ", name, speciality, city, address);
+        match sqlx::query(&query).execute(&self.connection).await {
+            Ok(_) => return true,
+            Err(_) => return false,
+        }
+    }
+
+    pub async fn add_new_appointment(&self, docid: i64, patid: i64, apptype: i64, datetime: &String, phyorvirt: &String, status: &String, prescription: &String) -> bool {
+        let naivedatetime = NaiveDateTime::parse_from_str(datetime, "%Y/%m/%d %H:%M:%S").unwrap();
+        let query = format!("
+                    insert into appointments (doctor_id, patient_id, appointment_type, date_time, type, status, prescription) values ({},{},{},'{}','{}','{}', '{}')
+                            ", docid, patid, apptype, naivedatetime, phyorvirt, status, prescription);
         match sqlx::query(&query).execute(&self.connection).await {
             Ok(_) => return true,
             Err(_) => return false,
