@@ -124,4 +124,14 @@ impl Database {
         }
     }
 
+    pub async fn add_new_doctor(&self, name: &String, speciality: i64, city: &String, address: &String) -> bool {
+        let query = format!("
+                    insert into doctors(name, speciality_id, city, address) values ('{}','{}','{}', '{}');
+                            ", name, speciality, city, address);
+        match sqlx::query(&query).execute(&self.connection).await {
+            Ok(_) => return true,
+            Err(_) => return false,
+        }
+    }
+
 }

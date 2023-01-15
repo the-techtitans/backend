@@ -25,6 +25,7 @@ async fn main() {
         .route("/patient", post(patient))
         .route("/find", get(find))
         .route("/newpatient", post(newpatient))
+        .route("/newdoctor", post(newdoctor))
         .route("/specialities", get(specialities));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -115,6 +116,27 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
         }
     }
 }
+
+async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
+    tracing::debug!(
+        "Got request to insert new doctor info"
+    );
+    match database::init().await {
+        Some(conn) => {
+            let res = conn.add_new_doctor(&payload.name, payload.speciality, &payload.city, &payload.address).await;
+            if res {
+                tracing::debug!("Record inserted successfully");
+                return (StatusCode::OK, Json("Inserted")).into_response();
+            } else {
+                return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            }
+        }
+        None => {
+            return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+        }
+    }
+}
+
 
 async fn specialities() -> Response {
     tracing::debug!("Got request to fetch specialities");

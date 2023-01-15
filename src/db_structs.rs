@@ -19,6 +19,15 @@ pub struct Patient {
 }
 
 #[derive(Deserialize)]
+pub struct Doctor {
+    pub name: String,
+    #[serde(deserialize_with = "from_str")]
+    pub speciality: i64,
+    pub city: String,
+    pub address: String,
+}
+
+#[derive(Deserialize)]
 pub struct City {
     pub city: String,
 }
