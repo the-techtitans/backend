@@ -103,6 +103,7 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
         Some(conn) => {
             let res = conn.add_new_patient(&payload.name, &payload.email, &payload.phone).await;
             if res {
+                tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
             } else {
                 return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
