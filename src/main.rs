@@ -32,8 +32,8 @@ async fn main() {
         .unwrap();
 }
 
-async fn root() -> String {
-    format!("Hello world")
+async fn root() -> &'static str {
+    "Hello world"
 }
 
 async fn prevapp(Json(payload): Json<PatientID>) -> Response {
