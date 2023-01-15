@@ -8,7 +8,7 @@ use std::str::FromStr;
 #[derive(Deserialize)]
 pub struct PatientID {
     #[serde(deserialize_with = "from_str")]
-    pub patient_id: i32,
+    pub patient_id: i64,
 }
 
 #[derive(Deserialize)]
@@ -35,7 +35,7 @@ pub struct PrevAppointments {
 
 #[derive(FromRow, Serialize)]
 pub struct DoctorInfo {
-    docid: i32,
+    docid: i64,
     docname: String,
     specname: String,
     address: String,

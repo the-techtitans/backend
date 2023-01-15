@@ -1,13 +1,13 @@
 -- - info about various specialities
 CREATE TABLE IF NOT EXISTS Specialities (
-    id INT PRIMARY KEY ,
+    id BIGSERIAL PRIMARY KEY ,
     name VARCHAR(255) NOT NULL,
     description TEXT
 );
 
 -- - info about doctors registered in system
 CREATE TABLE IF NOT EXISTS Doctors (
-    id INT PRIMARY KEY ,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     speciality_id INT NOT NULL,
     city VARCHAR(255) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS Doctors (
 -- - restricted to specialities; doesn't make sense for pediatrician to provide
 -- - dental services for example
 CREATE TABLE IF NOT EXISTS Appointment_Types (
-    id INT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     speciality_id INT NOT NULL,
     description TEXT,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS Appointment_Prices (
 
 -- - info about patients
 CREATE TABLE IF NOT EXISTS Patients (
-    id INT PRIMARY KEY ,
+    id BIGSERIAL PRIMARY KEY ,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(255) NOT NULL
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS Patients (
 
 -- - help doctors keep track of their appointments with patients
 CREATE TABLE IF NOT EXISTS Appointments (
-    id INT PRIMARY KEY ,
+    id BIGSERIAL PRIMARY KEY ,
     doctor_id INT NOT NULL,
     patient_id INT NOT NULL,
     appointment_type INT NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS Patients_Previous_Appointments () INHERITS (Appointme
 
 -- - keep track of notifications to deliver
 CREATE TABLE IF NOT EXISTS Notifications (
-    id INT PRIMARY KEY ,
+    id BIGSERIAL PRIMARY KEY ,
     patient_id INT NOT NULL,
     message TEXT NOT NULL,
     date_time TIMESTAMP NOT NULL,
