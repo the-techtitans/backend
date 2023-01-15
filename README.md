@@ -30,3 +30,4 @@ Then, run the project using ```cargo run```. It will run on port 3000
 |/prevapp | POST | Displays the previous appointments for particular patient | patient_id (POST request) | Yes
 |/doctors | POST | Displays doctors in a particular city | city (POST request) | No
 |/patient | POST | Displays info about patient | patient_id (POST request) | Yes
+|/newpatient | POST | Adds patient details to database | name, phone, email | Will be used for signup process
