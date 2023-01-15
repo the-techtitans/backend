@@ -24,7 +24,8 @@ async fn main() {
         .route("/doctors", post(doctors))
         .route("/patient", post(patient))
         .route("/find", get(find))
-        .route("/newpatient", post(newpatient));
+        .route("/newpatient", post(newpatient))
+        .route("/specialities", get(specialities));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", addr);
@@ -113,4 +114,16 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
             return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
         }
     }
+}
+
+async fn specialities() -> Response {
+    tracing::debug!("Got request to fetch specialities");
+    let res = match database::init().await {
+        Some(conn) => conn.view_specialities().await,
+        None => {
+            let res: Vec<Specialities> = Vec::new();
+            res
+        }
+    };
+    Json(res).into_response()
 }

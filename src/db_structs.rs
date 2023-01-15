@@ -64,6 +64,13 @@ pub struct DoctorPrices {
     price: i32,
 }
 
+#[derive(FromRow, Serialize)]
+pub struct Specialities {
+    id: i64,
+    name: String,
+    desc: String,
+}
+
 //function to convert the input string into a number with some Serde magic
 fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where

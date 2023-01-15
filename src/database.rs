@@ -104,6 +104,16 @@ impl Database {
         result
     }
 
+    pub async fn view_specialities(&self) -> Vec<Specialities> {
+        let query = "select id, name, description as desc
+                    from specialities;";
+        let result = sqlx::query_as::<_, Specialities>(&query)
+            .fetch_all(&self.connection)
+            .await
+            .expect("Error in database");
+        result
+    }
+
     pub async fn add_new_patient(&self, name: &String, email: &String, phone: &String) -> bool {
         let query = format!("
                     insert into patients(name, email, phone) values ('{}','{}','{}');
