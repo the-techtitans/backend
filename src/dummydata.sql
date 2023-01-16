@@ -4,11 +4,11 @@ INSERT INTO Specialities (name, description) VALUES ('Neurology', 'Speciality de
 INSERT INTO Specialities (name, description) VALUES ('Oncology', 'Speciality dealing with cancer');
 INSERT INTO Specialities (name, description) VALUES ('Orthopedics', 'Speciality dealing with diseases and injuries of the musculoskeletal system');
 
-INSERT INTO Doctors (name, speciality_id, city, address) VALUES ('Dr. John Smith', 1, 'New York', '123 Main St');
-INSERT INTO Doctors (name, speciality_id, city, address) VALUES ('Dr. Jane Doe', 2, 'Los Angeles', '456 Park Ave');
-INSERT INTO Doctors (name, speciality_id, city, address) VALUES ('Dr. Michael Johnson', 3, 'Chicago', '789 Elm St');
-INSERT INTO Doctors (name, speciality_id, city, address) VALUES ('Dr. Sarah Lee', 4, 'Houston', '321 Oak St');
-INSERT INTO Doctors (name, speciality_id, city, address) VALUES ('Dr. David Brown', 5, 'Philadelphia', '654 Pine St');
+INSERT INTO Doctors (name, speciality_id, city, address, email, phone) VALUES ('Dr. John Smith', 1, 'New York', '123 Main St', 'johnsmithemail@doctor.org', '555-555-5090');
+INSERT INTO Doctors (name, speciality_id, city, address, email, phone) VALUES ('Dr. Jane Doe', 2, 'Los Angeles', '456 Park Ave', 'janedoe@doctor.org', '555-550-5511');
+INSERT INTO Doctors (name, speciality_id, city, address, email, phone) VALUES ('Dr. Michael Johnson', 3, 'Chicago', '789 Elm St', 'michael@johnson.doctor', '555-101-1010');
+INSERT INTO Doctors (name, speciality_id, city, address, email, phone) VALUES ('Dr. Sarah Lee', 4, 'Houston', '321 Oak St', 'sarah_lee@doctor.org', '555-101-1212');
+INSERT INTO Doctors (name, speciality_id, city, address, email, phone) VALUES ('Dr. David Brown', 5, 'Philadelphia', '654 Pine St', 'davidb@rown.com', '555-111-1111');
 
 INSERT INTO Appointment_Types (name, speciality_id, description) VALUES ('Consultation', 1, 'General consultation with a cardiologist');
 INSERT INTO Appointment_Types (name, speciality_id, description) VALUES ('Skin Check', 2, 'Checkup for skin diseases');
@@ -40,3 +40,14 @@ INSERT INTO Patients_Previous_Appointments (doctor_id, patient_id, appointment_t
 
 INSERT INTO Notifications (patient_id, message, date_time) VALUES (4, 'Reminder: Virtual appointment with Dr. Sarah Lee on 2022-01-04 14:00:00', '2021-12-31 23:59:59');
 INSERT INTO Notifications (patient_id, message, date_time) VALUES (5, 'Reminder: Appointment with Dr. David Brown at 654 Pine St on 2022-01-05 11:00:00', '2021-12-31 23:59:59');
+
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('alice.smith@email.com', 'password1', false, 'jK7lm9nB5rD8tF6v');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('bob.johnson@email.com', 'password2', false, 'xZ3cV7bN5mJ8kL9t');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('charlie.brown@email.com', 'password3', false, 'fD8hJ9kL7nM6tG5v');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('david.lee@email.com', 'password4', false, 'jK7lM9nB5rD8tF6v');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('emily.davis@email.com', 'password5', false, 'xZ3xV7bN5mJ8kL9t');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('johnsmithemail@doctor.org', 'password6', true, 'woieug0930932t02');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('janedoe@doctor.org', 'password7', true, 'ffenv3hoi2yr0931');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('michael@johnson.doctor', 'password8', true, 'r710tr31fu1o3f09');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('sarah_lee@doctor.org', 'password9', true, '213y713r709317r1');
+INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('davidb@rown.com', 'password10', true, '9r7109ry109fyhwv');

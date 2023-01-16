@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS Doctors (
     speciality_id INT NOT NULL,
     city VARCHAR(255) NOT NULL,
     address VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(255) NOT NULL,
     FOREIGN KEY (speciality_id) REFERENCES Specialities(id)
 );
 
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Appointment_Prices (
 CREATE TABLE IF NOT EXISTS Patients (
     id BIGSERIAL PRIMARY KEY ,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(255) NOT NULL
 );
 
@@ -71,4 +73,13 @@ CREATE TABLE IF NOT EXISTS Notifications (
     message TEXT NOT NULL,
     date_time TIMESTAMP NOT NULL,
     FOREIGN KEY (patient_id) REFERENCES Patients(id)
+);
+
+-- - keep login info here
+CREATE TABLE IF NOT EXISTS Login (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    isdoctor BOOLEAN,
+    SALT CHAR(16) NOT NULL UNIQUE
 );
