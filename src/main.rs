@@ -188,24 +188,28 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
     }
 }
 
-async fn newappointment(Json(payload): Json<Appointment>) -> Response {
+async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) -> Response {
     tracing::debug!("Got request to insert new appointment info");
     match database::init().await {
         Some(conn) => {
-            let res = conn
-                .add_new_appointment(
-                    payload.doctor_id,
-                    payload.patient_id,
-                    payload.apptype,
-                    &payload.datetime,
-                    &payload.phyorvirt,
-                    &payload.status,
-                    &payload.prescription,
-                )
-                .await;
-            if res {
-                tracing::debug!("Record inserted successfully");
-                return (StatusCode::OK, Json("Inserted")).into_response();
+            if authenticate(&conn, headers, &payload.patient_id, false).await {
+                let res = conn
+                    .add_new_appointment(
+                        payload.doctor_id,
+                        payload.patient_id,
+                        payload.apptype,
+                        &payload.datetime,
+                        &payload.phyorvirt,
+                        &payload.status,
+                        &payload.prescription,
+                    )
+                    .await;
+                if res {
+                    tracing::debug!("Record inserted successfully");
+                    return (StatusCode::OK, Json("Inserted")).into_response();
+                } else {
+                    return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+                }
             } else {
                 return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
             }
