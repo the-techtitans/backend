@@ -8,7 +8,7 @@ It is being written in Rust using [Axum web framework](https://lib.rs/crates/axu
 
 Make sure you have Postgres instance and Rust toolchain running on your system.
 
-First, populate ```setup.env``` with DATABASE_URL according to [PostgreSQL standards](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING).
+First, populate ```setup.env``` with DATABASE_URL according to [PostgreSQL standards](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING), and a SECRET (which is a random string which will be used to generate JWTs)
 
 Then, rename ```setup.env``` to anything that begins with .env, like ```.env```.
 
@@ -30,7 +30,7 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/prevapp | POST | Displays the previous appointments for particular patient | patient_id (POST request) | Yes
 |/doctors | POST | Displays doctors in a particular city | city (POST request) | No
 |/patient | POST | Displays info about patient | patient_id (POST request) | Yes
-|/newpatient | POST | Adds patient details to database | name, phone, email | Will be used for signup process
+|/newpatient | POST | Adds patient details to database | name, phone, email, password | Will be used for signup process
 |/specialities | GET | Gets speciality details | Nothing | No
 |/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address | Will be used for signup process
 |/newappointment | POST | Add new appointment to database | doctor_id, patient_id, apptype (as an ID), datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS), phyorvirt (just write either physical or virtual checkup), status (cancelled, fulfilled, scheduled), prescription | Yes
