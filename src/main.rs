@@ -24,6 +24,7 @@ async fn main() {
         .route("/doctors", post(doctors))
         .route("/patient", post(patient))
         .route("/find", get(find))
+        .route("/login", post(login))
         .route("/newpatient", post(newpatient))
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
@@ -104,7 +105,7 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
     );
     match database::init().await {
         Some(conn) => {
-            let res = conn.add_new_patient(&payload.name, &payload.email, &payload.phone).await;
+            let res = conn.add_new_patient(&payload.name, &payload.email, &payload.phone).await && conn.register(&payload.email, &payload.password, false).await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
@@ -124,7 +125,7 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
     );
     match database::init().await {
         Some(conn) => {
-            let res = conn.add_new_doctor(&payload.name, payload.speciality, &payload.city, &payload.address).await;
+            let res = conn.add_new_doctor(&payload.name, payload.speciality, &payload.city, &payload.address, &payload.email, &payload.phone).await && conn.register(&payload.email, &payload.password, true).await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
@@ -169,4 +170,27 @@ async fn specialities() -> Response {
         }
     };
     Json(res).into_response()
+}
+
+async fn login(Json(payload): Json<Login>) -> Response {
+    tracing::debug!(
+        "Got request to login"
+    );
+    match database::init().await {
+        Some(conn) => {
+            let res = conn.login(&payload.email, &payload.password).await;
+            match res {
+                Some(jwt) =>  {
+                    tracing::debug!("Generated JWT successfully! {}", jwt);
+                    return (StatusCode::OK, Json(jwt)).into_response();
+                }
+                None => {
+                    return (StatusCode::BAD_REQUEST, Json("Error while logging in")).into_response();
+                }
+            }
+        }
+        None => {
+            return (StatusCode::BAD_REQUEST, Json("Error while logging in")).into_response();
+        }
+    }
 }

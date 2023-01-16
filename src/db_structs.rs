@@ -6,6 +6,12 @@ use std::str::FromStr;
 
 //inputs; input JSON -> serde -> these structs
 #[derive(Deserialize)]
+pub struct Login {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Deserialize)]
 pub struct PatientID {
     #[serde(deserialize_with = "from_str")]
     pub patient_id: i64,
@@ -16,6 +22,7 @@ pub struct Patient {
     pub name: String,
     pub email: String,
     pub phone: String,
+    pub password: String,
 }
 
 #[derive(Deserialize)]
@@ -25,6 +32,9 @@ pub struct Doctor {
     pub speciality: i64,
     pub city: String,
     pub address: String,
+    pub email: String,
+    pub phone: String,
+    pub password: String,
 }
 
 #[derive(Deserialize)]
@@ -50,6 +60,13 @@ pub struct Appointment {
     pub phyorvirt: String,
     pub status: String,
     pub prescription: String,
+}
+
+#[derive(Deserialize)]
+pub struct Registration {
+    pub email: String,
+    pub password: String,
+    pub isdoctor: bool
 }
 
 //outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
@@ -92,6 +109,19 @@ pub struct Specialities {
     id: i64,
     name: String,
     desc: String,
+}
+
+#[derive(FromRow, Serialize)]
+pub struct LoginTable {
+    pub salt: String,
+    pub hashedpass: String,
+    pub isdoctor: bool
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct JWT {
+    pub isdoctor: bool,
+    pub id: i64,
 }
 
 //function to convert the input string into a number with some Serde magic

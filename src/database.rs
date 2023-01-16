@@ -1,31 +1,48 @@
 //create structs for interfacing with the database
+use argon_hash_password;
+use chrono::NaiveDateTime;
 use dotenvy::dotenv;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
 use std::env;
 use tracing;
-use chrono::NaiveDateTime;
 
 use crate::db_structs::*;
 
 pub struct Database {
+    jwt_secret: Vec<u8>,
     connection: Pool<Postgres>,
 }
 
 pub async fn init() -> Option<Database> {
     dotenv().ok();
-    match env::var("DATABASE_URL") {
-        Ok(url) => {
-            tracing::debug!("Found database URL: {}", url);
-            if let Ok(pool) = PgPoolOptions::new().connect(&url).await {
-                tracing::debug!("Connected to database!");
-                return Some(Database { connection: pool });
-            } else {
-                tracing::error!("Could not connect using URL {}", url);
-                return None;
+    let dburl = env::var("DATABASE_URL");
+    let secret = env::var("SECRET");
+    match secret {
+        Ok(sec) => {
+            tracing::debug!("Found secret");
+            match dburl {
+                Ok(url) => {
+                    tracing::debug!("Found database URL: {}", url);
+                    if let Ok(pool) = PgPoolOptions::new().connect(&url).await {
+                        tracing::debug!("Connected to database!");
+                        return Some(Database {
+                            connection: pool,
+                            jwt_secret: sec.as_bytes().to_vec()
+                        });
+                    } else {
+                        tracing::error!("Could not connect using URL {}", url);
+                        return None;
+                    }
+                }
+                Err(_) => {
+                    eprintln!("Failed to connect to database!");
+                    return None;
+                }
             }
         }
         Err(_) => {
-            eprintln!("Failed to connect to database!");
+            eprintln!("Did not find a secret!");
             return None;
         }
     }
@@ -115,27 +132,58 @@ impl Database {
         result
     }
 
+    pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
+        let (hash, salt) = argon_hash_password::create_hash_and_salt(&password).unwrap();
+        let query = format!("
+                    insert into login(email, password, salt, isdoctor) values ('{}', '{}', '{}', {})
+                            ", email, hash, salt, isdoctor);
+        match sqlx::query(&query).execute(&self.connection).await {
+            Ok(_) => return true,
+            Err(_) => return false,
+        }
+    }
+
     pub async fn add_new_patient(&self, name: &String, email: &String, phone: &String) -> bool {
-        let query = format!("
+        let query = format!(
+            "
                     insert into patients(name, email, phone) values ('{}','{}','{}');
-                            ", name, email, phone);
+                            ",
+            name, email, phone
+        );
         match sqlx::query(&query).execute(&self.connection).await {
             Ok(_) => return true,
             Err(_) => return false,
         }
     }
 
-    pub async fn add_new_doctor(&self, name: &String, speciality: i64, city: &String, address: &String) -> bool {
+    pub async fn add_new_doctor(
+        &self,
+        name: &String,
+        speciality: i64,
+        city: &String,
+        address: &String,
+        email: &String,
+        phone: &String
+    ) -> bool {
         let query = format!("
-                    insert into doctors(name, speciality_id, city, address) values ('{}','{}','{}', '{}');
-                            ", name, speciality, city, address);
+                    insert into doctors(name, speciality_id, city, address, email, phone) values ('{}',{},'{}', '{}', '{}', '{}');
+                            ", name, speciality, city, address, email, phone);
         match sqlx::query(&query).execute(&self.connection).await {
             Ok(_) => return true,
             Err(_) => return false,
         }
     }
 
-    pub async fn add_new_appointment(&self, docid: i64, patid: i64, apptype: i64, datetime: &String, phyorvirt: &String, status: &String, prescription: &String) -> bool {
+    pub async fn add_new_appointment(
+        &self,
+        docid: i64,
+        patid: i64,
+        apptype: i64,
+        datetime: &String,
+        phyorvirt: &String,
+        status: &String,
+        prescription: &String,
+    ) -> bool {
         let naivedatetime = NaiveDateTime::parse_from_str(datetime, "%Y/%m/%d %H:%M:%S").unwrap();
         let query = format!("
                     insert into appointments (doctor_id, patient_id, appointment_type, date_time, type, status, prescription) values ({},{},{},'{}','{}','{}', '{}')
@@ -143,6 +191,64 @@ impl Database {
         match sqlx::query(&query).execute(&self.connection).await {
             Ok(_) => return true,
             Err(_) => return false,
+        }
+    }
+
+    //tries to find patient/doctor logging in with credentials and gives JWT if successful
+    pub async fn login(&self, email: &String, password: &String) -> Option<String> {
+        let query = format!(
+            "
+                    select salt, password as hashedpass, isdoctor from login where email = '{}';
+                ",
+            email
+        );
+        let result = sqlx::query_as::<_, LoginTable>(&query)
+            .fetch_one(&self.connection)
+            .await
+            .expect("Error in database");
+        let check = argon_hash_password::check_password_matches_hash(
+            password,
+            &result.hashedpass,
+            &result.salt,
+        )
+        .unwrap();
+        if check {
+            let mut tablename = "patients";
+            if result.isdoctor {
+                tablename = "doctors";
+            }
+            let query = format!(
+                "
+                        select id from {} where email = '{}';
+                    ",
+                tablename, email
+            );
+            let id: i64 = sqlx::query(&query)
+                .fetch_one(&self.connection)
+                .await
+                .expect("Error in database")
+                .try_get("id")
+                .unwrap();
+            let jwt = JWT {
+                isdoctor: result.isdoctor,
+                id,
+            };
+            let token = encode(
+                &Header::default(),
+                &jwt,
+                &EncodingKey::from_secret(&self.jwt_secret),
+            )
+            .unwrap();
+            Some(token)
+        } else {
+            None
+        }
+    }
+
+    pub async fn verify_jwt(&self, jwt: &String) -> Option<JWT> {
+        match decode::<JWT>(&jwt, &DecodingKey::from_secret(&self.jwt_secret), &Validation::default()) {
+            Ok(token) => Some(token.claims),
+            Err(_) => None
         }
     }
 
