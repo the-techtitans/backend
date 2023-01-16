@@ -248,9 +248,12 @@ impl Database {
         }
     }
 
-    pub async fn verify_jwt(&self, jwt: &String) -> Option<JWT> {
+    pub fn verify_jwt(&self, jwt: &str) -> Option<JWT> {
+        let binding = String::from(jwt).split("Bearer").collect::<Vec<&str>>().get(1).unwrap().to_string();
+        let token = binding.trim();
+        tracing::debug!("jwt : {}", token);
         match decode::<JWT>(
-            &jwt,
+            &token,
             &DecodingKey::from_secret(&self.jwt_secret),
             &Validation::default(),
         ) {
