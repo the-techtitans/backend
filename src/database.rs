@@ -187,7 +187,7 @@ impl Database {
         status: &String,
         prescription: &String,
     ) -> bool {
-        let naivedatetime = NaiveDateTime::parse_from_str(datetime, "%Y/%m/%d %H:%M:%S").unwrap();
+        let naivedatetime = NaiveDateTime::parse_from_str(datetime, "%Y-%m-%d %H:%M:%S").unwrap();
         let query = format!("
                     insert into appointments (doctor_id, patient_id, appointment_type, date_time, type, status, prescription) values ({},{},{},'{}','{}','{}', '{}')
                             ", docid, patid, apptype, naivedatetime, phyorvirt, status, prescription);
