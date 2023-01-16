@@ -250,7 +250,11 @@ impl Database {
     }
 
     pub fn verify_jwt(&self, jwt: &str) -> Option<JWT> {
-        let binding = match String::from(jwt).split("Bearer").collect::<Vec<&str>>().get(1) {
+        let binding = match String::from(jwt)
+            .split("Bearer")
+            .collect::<Vec<&str>>()
+            .get(1)
+        {
             Some(x) => x.to_string(),
             None => jwt.to_string(),
         };
@@ -264,17 +268,17 @@ impl Database {
             &validation,
         ) {
             Ok(token) => {
-                let id : i64 = token.claims.id.parse().unwrap();
+                let id: i64 = token.claims.id.parse().unwrap();
                 let res = JWT {
                     isdoctor: token.claims.isdoctor,
-                    id
+                    id,
                 };
                 Some(res)
-            },
+            }
             Err(x) => {
-                tracing::debug!("{}",x);
+                tracing::debug!("{}", x);
                 None
-            },
+            }
         }
     }
 }

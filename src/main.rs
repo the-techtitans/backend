@@ -1,6 +1,9 @@
 use axum::{
     extract::Query,
-    http::{StatusCode,header::{HeaderMap, AUTHORIZATION}},
+    http::{
+        header::{HeaderMap, AUTHORIZATION},
+        StatusCode,
+    },
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -14,7 +17,12 @@ use tracing_subscriber;
 mod database;
 mod db_structs;
 
-async fn authenticate(conn: &database::Database, headers: HeaderMap, given_id: &i64, isdoctor: bool) -> bool {
+async fn authenticate(
+    conn: &database::Database,
+    headers: HeaderMap,
+    given_id: &i64,
+    isdoctor: bool,
+) -> bool {
     match conn.verify_jwt(headers[AUTHORIZATION].to_str().unwrap()) {
         Some(jwt) => {
             tracing::debug!("Verified and parsed JWT");
@@ -75,7 +83,7 @@ async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response
                 let res: Vec<PrevAppointments> = Vec::new();
                 res
             }
-        },
+        }
         None => {
             let res: Vec<PrevAppointments> = Vec::new();
             res
@@ -208,7 +216,8 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
                     tracing::debug!("Record inserted successfully");
                     return (StatusCode::OK, Json("Inserted")).into_response();
                 } else {
-                    return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+                    return (StatusCode::BAD_REQUEST, Json("Error while inserting"))
+                        .into_response();
                 }
             } else {
                 return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();

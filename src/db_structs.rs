@@ -129,9 +129,8 @@ pub struct JWT {
 pub struct InternalJWT {
     pub isdoctor: bool,
     pub id: String,
-    pub exp: usize
+    pub exp: usize,
 }
-
 
 //function to convert the input string into a number with some Serde magic
 fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
