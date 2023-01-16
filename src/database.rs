@@ -232,9 +232,10 @@ impl Database {
                 .expect("Error in database")
                 .try_get("id")
                 .unwrap();
-            let jwt = JWT {
+            let jwt = InternalJWT {
                 isdoctor: result.isdoctor,
-                id,
+                id: id.to_string(),
+                exp: 1000000,
             };
             let token = encode(
                 &Header::default(),
@@ -249,16 +250,31 @@ impl Database {
     }
 
     pub fn verify_jwt(&self, jwt: &str) -> Option<JWT> {
-        let binding = String::from(jwt).split("Bearer").collect::<Vec<&str>>().get(1).unwrap().to_string();
-        let token = binding.trim();
-        tracing::debug!("jwt : {}", token);
-        match decode::<JWT>(
+        let binding = match String::from(jwt).split("Bearer").collect::<Vec<&str>>().get(1) {
+            Some(x) => x.to_string(),
+            None => jwt.to_string(),
+        };
+        let mut validation = Validation::default();
+        validation.validate_exp = false;
+        let token = binding.trim().to_string();
+        tracing::debug!("jwt : '{}'", token);
+        match decode::<InternalJWT>(
             &token,
             &DecodingKey::from_secret(&self.jwt_secret),
-            &Validation::default(),
+            &validation,
         ) {
-            Ok(token) => Some(token.claims),
-            Err(_) => None,
+            Ok(token) => {
+                let id : i64 = token.claims.id.parse().unwrap();
+                let res = JWT {
+                    isdoctor: token.claims.isdoctor,
+                    id
+                };
+                Some(res)
+            },
+            Err(x) => {
+                tracing::debug!("{}",x);
+                None
+            },
         }
     }
 }

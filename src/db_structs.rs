@@ -121,8 +121,17 @@ pub struct LoginTable {
 #[derive(Serialize, Deserialize)]
 pub struct JWT {
     pub isdoctor: bool,
+    #[serde(deserialize_with = "from_str")]
     pub id: i64,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct InternalJWT {
+    pub isdoctor: bool,
+    pub id: String,
+    pub exp: usize
+}
+
 
 //function to convert the input string into a number with some Serde magic
 fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>

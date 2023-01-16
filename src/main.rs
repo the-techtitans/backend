@@ -96,13 +96,20 @@ async fn doctors(Json(payload): Json<City>) -> Response {
     Json(res).into_response()
 }
 
-async fn patient(Json(payload): Json<PatientID>) -> Response {
+async fn patient(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
     tracing::debug!(
         "Got request to view patient info corresponding to patient ID {}",
         payload.patient_id
     );
     let res = match database::init().await {
-        Some(conn) => conn.view_patient_info(payload.patient_id).await,
+        Some(conn) => {
+            if authenticate(&conn, headers, &payload.patient_id, false).await {
+                conn.view_patient_info(payload.patient_id).await
+            } else {
+                let res: Vec<PatientInfo> = Vec::new();
+                res
+            }
+        }
         None => {
             let res: Vec<PatientInfo> = Vec::new();
             res
