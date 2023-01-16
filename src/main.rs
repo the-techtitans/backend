@@ -1,6 +1,6 @@
 use axum::{
     extract::Query,
-    http::StatusCode,
+    http::{StatusCode,header::{HeaderMap, AUTHORIZATION}},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -13,6 +13,25 @@ use tracing_subscriber;
 
 mod database;
 mod db_structs;
+
+async fn authenticate(conn: &database::Database, headers: HeaderMap, given_id: &i64, isdoctor: bool) -> bool {
+    match conn.verify_jwt(headers[AUTHORIZATION].to_str().unwrap()) {
+        Some(jwt) => {
+            tracing::debug!("Verified and parsed JWT");
+            if *given_id == jwt.id && isdoctor == jwt.isdoctor {
+                tracing::debug!("Correct JWT is given!");
+                return true;
+            } else {
+                tracing::error!("Incorrect JWT!");
+                return false;
+            }
+        }
+        None => {
+            tracing::debug!("Could not verify JWT!");
+            false
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -42,13 +61,21 @@ async fn root() -> &'static str {
     "Hello world"
 }
 
-async fn prevapp(Json(payload): Json<PatientID>) -> Response {
+async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
     tracing::debug!(
         "Got request to view previous appointments for patient ID {}",
         payload.patient_id
     );
     let res = match database::init().await {
-        Some(conn) => conn.view_prev_appointments(payload.patient_id).await,
+        Some(conn) => {
+            if authenticate(&conn, headers, &payload.patient_id, false).await {
+                let res = conn.view_prev_appointments(payload.patient_id).await;
+                res
+            } else {
+                let res: Vec<PrevAppointments> = Vec::new();
+                res
+            }
+        },
         None => {
             let res: Vec<PrevAppointments> = Vec::new();
             res
