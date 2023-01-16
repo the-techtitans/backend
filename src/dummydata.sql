@@ -40,14 +40,3 @@ INSERT INTO Patients_Previous_Appointments (doctor_id, patient_id, appointment_t
 
 INSERT INTO Notifications (patient_id, message, date_time) VALUES (4, 'Reminder: Virtual appointment with Dr. Sarah Lee on 2022-01-04 14:00:00', '2021-12-31 23:59:59');
 INSERT INTO Notifications (patient_id, message, date_time) VALUES (5, 'Reminder: Appointment with Dr. David Brown at 654 Pine St on 2022-01-05 11:00:00', '2021-12-31 23:59:59');
-
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('alice.smith@email.com', 'password1', false, 'jK7lm9nB5rD8tF6v');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('bob.johnson@email.com', 'password2', false, 'xZ3cV7bN5mJ8kL9t');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('charlie.brown@email.com', 'password3', false, 'fD8hJ9kL7nM6tG5v');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('david.lee@email.com', 'password4', false, 'jK7lM9nB5rD8tF6v');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('emily.davis@email.com', 'password5', false, 'xZ3xV7bN5mJ8kL9t');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('johnsmithemail@doctor.org', 'password6', true, 'woieug0930932t02');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('janedoe@doctor.org', 'password7', true, 'ffenv3hoi2yr0931');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('michael@johnson.doctor', 'password8', true, 'r710tr31fu1o3f09');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('sarah_lee@doctor.org', 'password9', true, '213y713r709317r1');
-INSERT INTO Login (email, password, isdoctor, SALT) VALUES ('davidb@rown.com', 'password10', true, '9r7109ry109fyhwv');
