@@ -1,6 +1,6 @@
 use axum::{
-    http::StatusCode,
     extract::Query,
+    http::StatusCode,
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -87,10 +87,14 @@ async fn patient(Json(payload): Json<PatientID>) -> Response {
 async fn find(payload: Query<CityApptype>) -> Response {
     tracing::debug!(
         "Got request to view all doctors with appointment type {} in city {}",
-        payload.apptype, payload.city
+        payload.apptype,
+        payload.city
     );
     let res = match database::init().await {
-        Some(conn) => conn.view_doctor_prices(&payload.city, &payload.apptype).await,
+        Some(conn) => {
+            conn.view_doctor_prices(&payload.city, &payload.apptype)
+                .await
+        }
         None => {
             let res: Vec<DoctorPrices> = Vec::new();
             res
@@ -100,12 +104,15 @@ async fn find(payload: Query<CityApptype>) -> Response {
 }
 
 async fn newpatient(Json(payload): Json<Patient>) -> Response {
-    tracing::debug!(
-        "Got request to insert new patient info"
-    );
+    tracing::debug!("Got request to insert new patient info");
     match database::init().await {
         Some(conn) => {
-            let res = conn.add_new_patient(&payload.name, &payload.email, &payload.phone).await && conn.register(&payload.email, &payload.password, false).await;
+            let res = conn
+                .add_new_patient(&payload.name, &payload.email, &payload.phone)
+                .await
+                && conn
+                    .register(&payload.email, &payload.password, false)
+                    .await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
@@ -120,12 +127,20 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
 }
 
 async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
-    tracing::debug!(
-        "Got request to insert new doctor info"
-    );
+    tracing::debug!("Got request to insert new doctor info");
     match database::init().await {
         Some(conn) => {
-            let res = conn.add_new_doctor(&payload.name, payload.speciality, &payload.city, &payload.address, &payload.email, &payload.phone).await && conn.register(&payload.email, &payload.password, true).await;
+            let res = conn
+                .add_new_doctor(
+                    &payload.name,
+                    payload.speciality,
+                    &payload.city,
+                    &payload.address,
+                    &payload.email,
+                    &payload.phone,
+                )
+                .await
+                && conn.register(&payload.email, &payload.password, true).await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
@@ -140,12 +155,20 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
 }
 
 async fn newappointment(Json(payload): Json<Appointment>) -> Response {
-    tracing::debug!(
-        "Got request to insert new appointment info"
-    );
+    tracing::debug!("Got request to insert new appointment info");
     match database::init().await {
         Some(conn) => {
-            let res = conn.add_new_appointment(payload.doctor_id, payload.patient_id, payload.apptype, &payload.datetime, &payload.phyorvirt, &payload.status, &payload.prescription).await;
+            let res = conn
+                .add_new_appointment(
+                    payload.doctor_id,
+                    payload.patient_id,
+                    payload.apptype,
+                    &payload.datetime,
+                    &payload.phyorvirt,
+                    &payload.status,
+                    &payload.prescription,
+                )
+                .await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
@@ -158,7 +181,6 @@ async fn newappointment(Json(payload): Json<Appointment>) -> Response {
         }
     }
 }
-
 
 async fn specialities() -> Response {
     tracing::debug!("Got request to fetch specialities");
@@ -173,19 +195,18 @@ async fn specialities() -> Response {
 }
 
 async fn login(Json(payload): Json<Login>) -> Response {
-    tracing::debug!(
-        "Got request to login"
-    );
+    tracing::debug!("Got request to login");
     match database::init().await {
         Some(conn) => {
             let res = conn.login(&payload.email, &payload.password).await;
             match res {
-                Some(jwt) =>  {
+                Some(jwt) => {
                     tracing::debug!("Generated JWT successfully! {}", jwt);
                     return (StatusCode::OK, Json(jwt)).into_response();
                 }
                 None => {
-                    return (StatusCode::BAD_REQUEST, Json("Error while logging in")).into_response();
+                    return (StatusCode::BAD_REQUEST, Json("Error while logging in"))
+                        .into_response();
                 }
             }
         }

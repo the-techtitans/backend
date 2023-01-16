@@ -66,7 +66,7 @@ pub struct Appointment {
 pub struct Registration {
     pub email: String,
     pub password: String,
-    pub isdoctor: bool
+    pub isdoctor: bool,
 }
 
 //outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
@@ -115,7 +115,7 @@ pub struct Specialities {
 pub struct LoginTable {
     pub salt: String,
     pub hashedpass: String,
-    pub isdoctor: bool
+    pub isdoctor: bool,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -28,7 +28,7 @@ pub async fn init() -> Option<Database> {
                         tracing::debug!("Connected to database!");
                         return Some(Database {
                             connection: pool,
-                            jwt_secret: sec.as_bytes().to_vec()
+                            jwt_secret: sec.as_bytes().to_vec(),
                         });
                     } else {
                         tracing::error!("Could not connect using URL {}", url);
@@ -134,9 +134,12 @@ impl Database {
 
     pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
         let (hash, salt) = argon_hash_password::create_hash_and_salt(&password).unwrap();
-        let query = format!("
+        let query = format!(
+            "
                     insert into login(email, password, salt, isdoctor) values ('{}', '{}', '{}', {})
-                            ", email, hash, salt, isdoctor);
+                            ",
+            email, hash, salt, isdoctor
+        );
         match sqlx::query(&query).execute(&self.connection).await {
             Ok(_) => return true,
             Err(_) => return false,
@@ -163,7 +166,7 @@ impl Database {
         city: &String,
         address: &String,
         email: &String,
-        phone: &String
+        phone: &String,
     ) -> bool {
         let query = format!("
                     insert into doctors(name, speciality_id, city, address, email, phone) values ('{}',{},'{}', '{}', '{}', '{}');
@@ -246,10 +249,13 @@ impl Database {
     }
 
     pub async fn verify_jwt(&self, jwt: &String) -> Option<JWT> {
-        match decode::<JWT>(&jwt, &DecodingKey::from_secret(&self.jwt_secret), &Validation::default()) {
+        match decode::<JWT>(
+            &jwt,
+            &DecodingKey::from_secret(&self.jwt_secret),
+            &Validation::default(),
+        ) {
             Ok(token) => Some(token.claims),
-            Err(_) => None
+            Err(_) => None,
         }
     }
-
 }
