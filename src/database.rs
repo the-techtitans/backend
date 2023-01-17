@@ -24,15 +24,19 @@ pub async fn init() -> Option<Database> {
             match dburl {
                 Ok(url) => {
                     tracing::debug!("Found database URL: {}", url);
-                    if let Ok(pool) = PgPoolOptions::new().connect(&url).await {
-                        tracing::debug!("Connected to database!");
-                        return Some(Database {
-                            connection: pool,
-                            jwt_secret: sec.as_bytes().to_vec(),
-                        });
-                    } else {
-                        tracing::error!("Could not connect using URL {}", url);
-                        return None;
+                    match PgPoolOptions::new().connect(&url).await {
+                        Ok(pool) => {
+                            tracing::debug!("Connected to database!");
+                            return Some(Database {
+                                connection: pool,
+                                jwt_secret: sec.as_bytes().to_vec(),
+                            });
+                        },
+                        Err(e) => {
+                            tracing::error!("Could not connect using URL {}", url);
+                            tracing::error!("Error: {}", e);
+                            return None;
+                        }
                     }
                 }
                 Err(_) => {
