@@ -112,6 +112,20 @@ pub struct DoctorPrices {
 }
 
 #[derive(FromRow, Serialize)]
+pub struct DoctorAppointments {
+    #[serde(deserialize_with = "from_str")]
+    id: i64,
+    #[serde(deserialize_with = "from_str")]
+    patient_id: i64,
+    #[serde(deserialize_with = "from_str")]
+    apptype: i64,
+    datetime: String,
+    phyorvirt: String,
+    status: String,
+    prescription: String,
+}
+
+#[derive(FromRow, Serialize)]
 pub struct Specialities {
     id: i64,
     name: String,

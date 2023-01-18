@@ -61,6 +61,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/prevapp", post(prevapp))
+        .route("/doctorappointments", post(doctorappointments))
         .route("/doctors", post(doctors))
         .route("/patient", post(patient))
         .route("/find", get(find))
@@ -110,8 +111,36 @@ async fn prescriptions(headers: HeaderMap, Json(payload): Json<PatientID>) -> Re
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    (code,Json(res)).into_response()
+    (code, Json(res)).into_response()
+}
 
+async fn doctorappointments(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
+    tracing::debug!(
+        "Got request to view appointments for doctor ID {}",
+        payload.patient_id
+    );
+    let mut code = StatusCode::OK;
+    let res = match database::init().await {
+        Some(conn) => {
+            if authenticate(&conn, headers, &payload.patient_id, true).await {
+                let res = conn.view_doctor_appointments(payload.patient_id).await;
+                res
+            } else {
+                code = StatusCode::UNAUTHORIZED;
+                let res: Vec<DoctorAppointments> = Vec::new();
+                res
+            }
+        }
+        None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
+            let res: Vec<DoctorAppointments> = Vec::new();
+            res
+        }
+    };
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code, Json(res)).into_response()
 }
 
 async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
@@ -140,7 +169,7 @@ async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    (code,Json(res)).into_response()
+    (code, Json(res)).into_response()
 }
 
 async fn doctors(Json(payload): Json<City>) -> Response {
@@ -157,7 +186,7 @@ async fn doctors(Json(payload): Json<City>) -> Response {
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    (code,Json(res)).into_response()
+    (code, Json(res)).into_response()
 }
 
 async fn patient(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
@@ -185,7 +214,7 @@ async fn patient(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    (code,Json(res)).into_response()
+    (code, Json(res)).into_response()
 }
 
 async fn find(payload: Query<CityApptype>) -> Response {
@@ -209,7 +238,7 @@ async fn find(payload: Query<CityApptype>) -> Response {
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    (code,Json(res)).into_response()
+    (code, Json(res)).into_response()
 }
 
 async fn newpatient(Json(payload): Json<Patient>) -> Response {
@@ -230,7 +259,11 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
             }
         }
         None => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Error while inserting"),
+            )
+                .into_response();
         }
     }
 }
@@ -258,7 +291,11 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
             }
         }
         None => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Error while inserting"),
+            )
+                .into_response();
         }
     }
 }
@@ -291,7 +328,11 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
             }
         }
         None => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Error while inserting"),
+            )
+                .into_response();
         }
     }
 }
@@ -310,7 +351,7 @@ async fn specialities() -> Response {
     if res.is_empty() && code == StatusCode::OK {
         code = StatusCode::BAD_REQUEST;
     }
-    return (code,Json(res)).into_response();
+    return (code, Json(res)).into_response();
 }
 
 async fn login(Json(payload): Json<Login>) -> Response {
@@ -330,7 +371,11 @@ async fn login(Json(payload): Json<Login>) -> Response {
             }
         }
         None => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while logging in")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Error while logging in"),
+            )
+                .into_response();
         }
     }
 }

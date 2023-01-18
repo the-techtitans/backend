@@ -155,6 +155,17 @@ impl Database {
             .await
     }
 
+    pub async fn view_doctor_appointments(&self, doctor_id: i64) -> Vec<DoctorAppointments> {
+        let query = format!(
+            "select id, patient_id, appointment_type as apptype,
+            TO_CHAR(date_time, 'YYYY-MM-DD HH24:MM:SS') as datetime,
+            type as phyorvirt, status, prescription from appointments where doctor_id = {} order by date_time
+            ", doctor_id
+        );
+        self.get_query_result::<DoctorAppointments, Postgres>(&query)
+            .await
+    }
+
     pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
         let Ok((hash, salt)) = argon_hash_password::create_hash_and_salt(&password) else {
             tracing::error!("Hash and salt were not able to be created, registration error");
