@@ -53,32 +53,60 @@ pub async fn init() -> Option<Database> {
 }
 
 impl Database {
+    pub async fn view_prescriptions(&self, patient_id: i64) -> Vec<Prescriptions> {
+        let query = format!("
+                    (select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.prescription as prescription
+                    from patients_previous_appointments a
+                    join doctors d on d.id = a.doctor_id
+                    where a.patient_id = {}
+                    order by timestamp desc)
+                    UNION
+                    (select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.prescription as prescription
+                    from appointments a
+                    join doctors d on d.id = a.doctor_id
+                    where a.patient_id = {}
+                    order by timestamp desc)
+                    ;", patient_id, patient_id);
+        match sqlx::query_as::<_, Prescriptions>(&query)
+            .fetch_all(&self.connection)
+            .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing prescriptions");
+                let empty: Vec<Prescriptions> = Vec::new();
+                empty
+            }
+        }
+    }
+
     pub async fn view_prev_appointments(&self, patient_id: i64) -> Vec<PrevAppointments> {
         let query = format!("
-                    select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
+                    (select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
                     from patients_previous_appointments a
                     join doctors d on d.id = a.doctor_id
                     join specialities p on p.id = a.appointment_type
                     where a.patient_id = {}
-                    order by timestamp desc
+                    order by timestamp desc)
                     UNION
-                    select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
+                    (select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
                     from appointments a
                     join doctors d on d.id = a.doctor_id
                     join specialities p on p.id = a.appointment_type
                     where a.patient_id = {}
-                    order by timestamp desc
+                    order by timestamp desc)
                     ;", patient_id, patient_id);
         match sqlx::query_as::<_, PrevAppointments>(&query)
             .fetch_all(&self.connection)
-            .await {
-                Ok(result) => result,
-                Err(_) => {
-                    tracing::error!("Error while viewing previous appointments");
-                    let empty : Vec<PrevAppointments> = Vec::new();
-                    empty
-                }
+            .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing previous appointments");
+                let empty: Vec<PrevAppointments> = Vec::new();
+                empty
             }
+        }
     }
 
     pub async fn view_same_city_doctors(&self, city: String) -> Vec<DoctorInfo> {
@@ -90,14 +118,15 @@ impl Database {
                     ;", city);
         match sqlx::query_as::<_, DoctorInfo>(&query)
             .fetch_all(&self.connection)
-            .await {
-                Ok(result) => result,
-                Err(_) => {
-                    tracing::error!("Error while viewing doctors");
-                    let empty : Vec<DoctorInfo> = Vec::new();
-                    empty
-                }
+            .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing doctors");
+                let empty: Vec<DoctorInfo> = Vec::new();
+                empty
             }
+        }
     }
 
     pub async fn view_patient_info(&self, patient_id: i64) -> Vec<PatientInfo> {
@@ -111,14 +140,15 @@ impl Database {
         );
         match sqlx::query_as::<_, PatientInfo>(&query)
             .fetch_all(&self.connection)
-            .await {
-                Ok(result) => result,
-                Err(_) => {
-                    tracing::error!("Error while viewing patient info");
-                    let empty : Vec<PatientInfo> = Vec::new();
-                    empty
-                }
+            .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing patient info");
+                let empty: Vec<PatientInfo> = Vec::new();
+                empty
             }
+        }
     }
 
     pub async fn view_doctor_prices(&self, city: &String, apptype: &String) -> Vec<DoctorPrices> {
@@ -143,14 +173,15 @@ impl Database {
         );
         match sqlx::query_as::<_, DoctorPrices>(&query)
             .fetch_all(&self.connection)
-            .await {
-                Ok(result) => result,
-                Err(_) => {
-                    tracing::error!("Error while viewing doctors and prices");
-                    let empty : Vec<DoctorPrices> = Vec::new();
-                    empty
-                }
+            .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing doctors and prices");
+                let empty: Vec<DoctorPrices> = Vec::new();
+                empty
             }
+        }
     }
 
     pub async fn view_specialities(&self) -> Vec<Specialities> {

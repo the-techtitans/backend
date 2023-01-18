@@ -61,6 +61,7 @@ async fn main() {
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
         .route("/specialities", get(specialities))
+        .route("/prescriptions", post(prescriptions))
         .layer(cors);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -74,6 +75,30 @@ async fn main() {
 async fn root() -> &'static str {
     "Hello world"
 }
+
+async fn prescriptions(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
+    tracing::debug!(
+        "Got request to view previous appointments for patient ID {}",
+        payload.patient_id
+    );
+    let res = match database::init().await {
+        Some(conn) => {
+            if authenticate(&conn, headers, &payload.patient_id, false).await {
+                let res = conn.view_prescriptions(payload.patient_id).await;
+                res
+            } else {
+                let res: Vec<Prescriptions> = Vec::new();
+                res
+            }
+        }
+        None => {
+            let res: Vec<Prescriptions> = Vec::new();
+            res
+        }
+    };
+    Json(res).into_response()
+}
+
 
 async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
     tracing::debug!(

@@ -71,6 +71,13 @@ pub struct Registration {
 
 //outputs; SQL query -> sqlx -> these structs -> serde -> output JSON
 #[derive(FromRow, Serialize)]
+pub struct Prescriptions {
+    docname: String,
+    timestamp: String,
+    prescription: String
+}
+
+#[derive(FromRow, Serialize)]
 pub struct PrevAppointments {
     docname: String,
     timestamp: String,
