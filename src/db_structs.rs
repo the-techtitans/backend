@@ -119,6 +119,12 @@ pub struct Apptypes {
 }
 
 #[derive(FromRow, Serialize)]
+pub struct Cities {
+    name: String
+}
+
+
+#[derive(FromRow, Serialize)]
 pub struct DoctorAppointments {
     #[serde(deserialize_with = "from_str")]
     id: i64,

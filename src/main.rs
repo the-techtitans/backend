@@ -70,6 +70,7 @@ async fn main() {
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
         .route("/specialities", get(specialities))
+        .route("/cities", get(cities))
         .route("/apptypes", get(apptypes))
         .route("/prescriptions", post(prescriptions))
         .layer(cors);
@@ -341,6 +342,23 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
                 .into_response();
         }
     }
+}
+
+async fn cities() -> Response {
+    tracing::debug!("Got request to fetch cities");
+    let mut code = StatusCode::OK;
+    let res = match database::init().await {
+        Some(conn) => conn.view_cities().await,
+        None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
+            let res: Vec<Cities> = Vec::new();
+            res
+        }
+    };
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    return (code, Json(res)).into_response();
 }
 
 async fn apptypes() -> Response {

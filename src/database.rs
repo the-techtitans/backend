@@ -163,6 +163,14 @@ impl Database {
             .await
     }
 
+    pub async fn view_cities(&self) -> Vec<Cities> {
+        let query = String::from(
+            "select distinct(city) from doctors;"
+        );
+        self.get_query_result::<Cities, Postgres>(&query)
+            .await
+    }
+
     pub async fn view_doctor_appointments(&self, doctor_id: i64) -> Vec<DoctorAppointments> {
         let query = format!(
             "select id, patient_id, appointment_type as apptype,
