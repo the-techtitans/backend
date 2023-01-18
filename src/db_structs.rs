@@ -120,7 +120,7 @@ pub struct Apptypes {
 
 #[derive(FromRow, Serialize)]
 pub struct Cities {
-    name: String
+    city: String
 }
 
 
