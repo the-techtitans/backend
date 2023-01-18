@@ -74,7 +74,7 @@ pub struct Registration {
 pub struct Prescriptions {
     docname: String,
     timestamp: String,
-    prescription: String
+    prescription: String,
 }
 
 #[derive(FromRow, Serialize)]
