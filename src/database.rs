@@ -3,7 +3,7 @@ use argon_hash_password;
 use chrono::NaiveDateTime;
 use dotenvy::dotenv;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row, postgres::PgRow};
 use std::env;
 use tracing;
 
@@ -42,6 +42,28 @@ pub async fn init() -> Option<Database> {
 }
 
 impl Database {
+
+    async fn get_query_result<ResultStruct, DB>(&self, query: &String) -> Vec<ResultStruct>
+        where ResultStruct: for<'r> sqlx::FromRow<'r, <DB as sqlx::Database>::Row>,
+        ResultStruct: Unpin,
+        ResultStruct: Send,
+        DB: sqlx::Database<Row = PgRow>,
+    {
+        match sqlx::query_as::<_,ResultStruct>(&query)
+            .fetch_all(&self.connection)
+            .await
+        {
+            Ok(result) => {
+                result
+            },
+            Err(_) => {
+                tracing::error!("Error while running query");
+                let empty: Vec<ResultStruct> = Vec::new();
+                empty
+            }
+        }
+    }
+
     pub async fn view_prescriptions(&self, patient_id: i64) -> Vec<Prescriptions> {
         let query = format!("
                     (select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.prescription as prescription
@@ -56,17 +78,7 @@ impl Database {
                     where a.patient_id = {}
                     order by timestamp desc)
                     ;", patient_id, patient_id);
-        match sqlx::query_as::<_, Prescriptions>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing prescriptions");
-                let empty: Vec<Prescriptions> = Vec::new();
-                empty
-            }
-        }
+        self.get_query_result::<Prescriptions, Postgres>(&query).await
     }
 
     pub async fn view_prev_appointments(&self, patient_id: i64) -> Vec<PrevAppointments> {
@@ -85,18 +97,8 @@ impl Database {
                     where a.patient_id = {}
                     order by timestamp desc)
                     ;", patient_id, patient_id);
-        match sqlx::query_as::<_, PrevAppointments>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing previous appointments");
-                let empty: Vec<PrevAppointments> = Vec::new();
-                empty
-            }
-        }
-    }
+        self.get_query_result::<PrevAppointments, Postgres>(&query).await
+}
 
     pub async fn view_same_city_doctors(&self, city: String) -> Vec<DoctorInfo> {
         let query = format!("
@@ -105,17 +107,7 @@ impl Database {
                     join specialities s on s.id = d.speciality_id
                     where d.city = '{}'
                     ;", city);
-        match sqlx::query_as::<_, DoctorInfo>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing doctors");
-                let empty: Vec<DoctorInfo> = Vec::new();
-                empty
-            }
-        }
+        self.get_query_result::<DoctorInfo, Postgres>(&query).await
     }
 
     pub async fn view_patient_info(&self, patient_id: i64) -> Vec<PatientInfo> {
@@ -127,17 +119,7 @@ impl Database {
                     ;",
             patient_id
         );
-        match sqlx::query_as::<_, PatientInfo>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing patient info");
-                let empty: Vec<PatientInfo> = Vec::new();
-                empty
-            }
-        }
+        self.get_query_result::<PatientInfo, Postgres>(&query).await
     }
 
     pub async fn view_doctor_prices(&self, city: &String, apptype: &String) -> Vec<DoctorPrices> {
@@ -160,33 +142,13 @@ impl Database {
                     ",
             isapptypespecified, iscityspecified
         );
-        match sqlx::query_as::<_, DoctorPrices>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing doctors and prices");
-                let empty: Vec<DoctorPrices> = Vec::new();
-                empty
-            }
-        }
+        self.get_query_result::<DoctorPrices, Postgres>(&query).await
     }
 
     pub async fn view_specialities(&self) -> Vec<Specialities> {
-        let query = "select id, name, description as desc
-                    from specialities;";
-        match sqlx::query_as::<_, Specialities>(&query)
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(result) => result,
-            Err(_) => {
-                tracing::error!("Error while viewing specialities");
-                let empty: Vec<Specialities> = Vec::new();
-                empty
-            }
-        }
+        let query = String::from("select id, name, description as desc
+                    from specialities;");
+        self.get_query_result::<Specialities, Postgres>(&query).await
     }
 
     pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
