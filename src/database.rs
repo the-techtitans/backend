@@ -16,37 +16,26 @@ pub struct Database {
 
 pub async fn init() -> Option<Database> {
     dotenv().ok();
-    let dburl = env::var("DATABASE_URL");
-    let secret = env::var("SECRET");
-    match secret {
-        Ok(sec) => {
-            tracing::debug!("Found secret");
-            match dburl {
-                Ok(url) => {
-                    tracing::debug!("Found database URL: {}", url);
-                    match PgPoolOptions::new().connect(&url).await {
-                        Ok(pool) => {
-                            tracing::debug!("Connected to database!");
-                            return Some(Database {
-                                connection: pool,
-                                jwt_secret: sec.as_bytes().to_vec(),
-                            });
-                        }
-                        Err(e) => {
-                            tracing::error!("Could not connect using URL {}", url);
-                            tracing::error!("Error: {}", e);
-                            return None;
-                        }
-                    }
-                }
-                Err(_) => {
-                    eprintln!("Failed to connect to database!");
-                    return None;
-                }
-            }
+    let Ok(url) = env::var("DATABASE_URL") else {
+        tracing::error!("Couldn't find DATABASE_URL, aborting");
+        return None;
+    };
+    let Ok(sec) = env::var("SECRET") else {
+        tracing::error!("Couldn't find SECRET, aborting");
+        return None;
+    };
+    tracing::debug!("Found database URL: {} and secret", url);
+    match PgPoolOptions::new().connect(&url).await {
+        Ok(pool) => {
+            tracing::debug!("Connected to database!");
+            return Some(Database {
+                connection: pool,
+                jwt_secret: sec.as_bytes().to_vec(),
+            });
         }
-        Err(_) => {
-            eprintln!("Did not find a secret!");
+        Err(e) => {
+            tracing::error!("Could not connect using URL {}", url);
+            tracing::error!("Error: {}", e);
             return None;
         }
     }
