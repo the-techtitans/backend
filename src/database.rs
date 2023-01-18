@@ -134,7 +134,7 @@ impl Database {
 
         let query = format!(
             "
-                    select d.name as docname, d.city as city, d.address as address, t.name as apptype, p.price
+                    select d.doctor_id as docid, d.name as docname, d.city as city, d.address as address, t.name as apptype, p.price
                     from doctors d
                     join appointment_types t on d.speciality_id = t.speciality_id
                     join appointment_prices p on d.id = p.doctor_id and t.id = p.appointment_type
@@ -152,6 +152,14 @@ impl Database {
                     from specialities;",
         );
         self.get_query_result::<Specialities, Postgres>(&query)
+            .await
+    }
+
+    pub async fn view_appointment_types(&self) -> Vec<Apptypes> {
+        let query = String::from(
+            "select id, name from appointment_types;"
+        );
+        self.get_query_result::<Apptypes, Postgres>(&query)
             .await
     }
 

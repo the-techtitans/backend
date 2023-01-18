@@ -70,6 +70,7 @@ async fn main() {
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
         .route("/specialities", get(specialities))
+        .route("/apptypes", get(apptypes))
         .route("/prescriptions", post(prescriptions))
         .layer(cors);
 
@@ -272,7 +273,12 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
     tracing::debug!("Got request to insert new doctor info");
     match database::init().await {
         Some(conn) => {
-            let res = conn
+            let mut res = conn.register(&payload.email, &payload.password, true).await;
+            if !res {
+                tracing::error!("Record could not be inserted successfully");
+                return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            }
+            res = res && conn
                 .add_new_doctor(
                     &payload.name,
                     payload.speciality,
@@ -281,12 +287,12 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
                     &payload.email,
                     &payload.phone,
                 )
-                .await
-                && conn.register(&payload.email, &payload.password, true).await;
+                .await;
             if res {
                 tracing::debug!("Record inserted successfully");
                 return (StatusCode::OK, Json("Inserted")).into_response();
             } else {
+                tracing::error!("Record could not be inserted successfully");
                 return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
             }
         }
@@ -335,6 +341,23 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
                 .into_response();
         }
     }
+}
+
+async fn apptypes() -> Response {
+    tracing::debug!("Got request to fetch appointment types");
+    let mut code = StatusCode::OK;
+    let res = match database::init().await {
+        Some(conn) => conn.view_appointment_types().await,
+        None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
+            let res: Vec<Apptypes> = Vec::new();
+            res
+        }
+    };
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    return (code, Json(res)).into_response();
 }
 
 async fn specialities() -> Response {

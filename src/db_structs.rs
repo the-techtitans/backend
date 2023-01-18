@@ -104,11 +104,18 @@ pub struct PatientInfo {
 
 #[derive(FromRow, Serialize)]
 pub struct DoctorPrices {
+    docid: i64,
     docname: String,
     city: String,
     address: String,
     apptype: String,
     price: i32,
+}
+
+#[derive(FromRow, Serialize)]
+pub struct Apptypes {
+    id: i64,
+    name: String
 }
 
 #[derive(FromRow, Serialize)]
