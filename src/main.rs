@@ -1,7 +1,7 @@
 use axum::{
     extract::Query,
     http::{
-        header::{HeaderMap, ACCEPT, AUTHORIZATION},
+        header::{HeaderMap, AUTHORIZATION},
         Method, StatusCode,
     },
     response::{IntoResponse, Response},
