@@ -18,7 +18,13 @@ createdb <dbname you gave in DATABASE_URL>
 psql <dbname you gave in DATABASE_URL> -f src/schema.sql
 ```
 
-Feel free to add some dummy data at this stage or use the dummy data contained in ```src/dummydata.sql``` to get some sample data.
+Feel free to add some dummy data at this stage or use the dummy data contained in ```src/dummydata.sql``` to get some sample data by running the following command:
+
+```
+psql <dbname you gave in DATABASE_URL> -f src/dummydata.sql
+```
+
+Note: this does NOT contain a single record for the login table! You will need to use the ```/newdoctor``` or ```/newpatient``` endpoints to create a new doctor/patient which will also insert into these tables. You can then use these credentials in the API testing to make sure authentication works as intended
 
 Then, run the project using ```cargo run```. It will run on port 3000. For log messages, use the ```RUST_LOG``` env variable (setting to debug usually prints good messages to understand what is going on)
 
