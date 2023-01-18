@@ -228,6 +228,13 @@ impl Database {
             tracing::error!("Couldn't parse date time into NaiveDateTime");
             return false;
         };
+        let doctorapps = self.view_doctor_appointments(docid).await;
+        for app in doctorapps.iter() {
+            if app.datetime == *datetime && app.status != "cancelled" {
+                tracing::error!("Appointment has already been booked");
+                return false;
+            }
+        }
         let query = format!("
                     insert into appointments (doctor_id, patient_id, appointment_type, date_time, type, status, prescription) values ({},{},{},'{}','{}','{}', '{}')
                             ", docid, patid, apptype, naivedatetime, phyorvirt, status, prescription);
