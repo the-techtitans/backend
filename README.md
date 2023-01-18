@@ -36,3 +36,13 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/newappointment | POST | Add new appointment to database | doctor_id, patient_id, apptype (as an ID), datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS), phyorvirt (just write either physical or virtual checkup), status (cancelled, fulfilled, scheduled), prescription | Yes
 |/login | POST | Generate JWT for a user (doctor or patient) | email, password | No (JWT is used as token to get authentication implemented)
 |/prescriptions | POST | Get the doctor name, date and time, and prescription text previously given | patient_id | Yes
+
+## Response Codes
+
+|Number|Name|Description|
+---|---|---
+200|OK|Everything checked out, request is good
+500|Internal Server Error| There is a problem with connecting to the database
+401| Unauthorized| You didn't provide the right authorization token (the JWT) or it was not provided properly. In whatever case, you don't have the right to view what you requested so it was denied
+400| Bad Request | This is returned whenever the database has no records for your request. It's intended as a shorthand to save you time to check whether you received *any* records
+405 | Method Not Allowed| You should only make a POST request to an endpoint that expects a POST request and a GET request to one that expects a GET request
