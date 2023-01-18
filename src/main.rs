@@ -24,7 +24,11 @@ async fn authenticate(
     given_id: &i64,
     isdoctor: bool,
 ) -> bool {
-    match conn.verify_jwt(headers[AUTHORIZATION].to_str().unwrap()) {
+    let Ok(rawjwt) = headers[AUTHORIZATION].to_str() else {
+        tracing::error!("No JWT given in request, denying access..");
+        return false;
+    };
+    match conn.verify_jwt(rawjwt) {
         Some(jwt) => {
             tracing::debug!("Verified and parsed JWT");
             if *given_id == jwt.id && isdoctor == jwt.isdoctor {
@@ -98,7 +102,6 @@ async fn prescriptions(headers: HeaderMap, Json(payload): Json<PatientID>) -> Re
     };
     Json(res).into_response()
 }
-
 
 async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
     tracing::debug!(

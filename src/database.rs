@@ -187,15 +187,24 @@ impl Database {
     pub async fn view_specialities(&self) -> Vec<Specialities> {
         let query = "select id, name, description as desc
                     from specialities;";
-        let result = sqlx::query_as::<_, Specialities>(&query)
+        match sqlx::query_as::<_, Specialities>(&query)
             .fetch_all(&self.connection)
             .await
-            .expect("Error in database");
-        result
+        {
+            Ok(result) => result,
+            Err(_) => {
+                tracing::error!("Error while viewing specialities");
+                let empty: Vec<Specialities> = Vec::new();
+                empty
+            }
+        }
     }
 
     pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
-        let (hash, salt) = argon_hash_password::create_hash_and_salt(&password).unwrap();
+        let Ok((hash, salt)) = argon_hash_password::create_hash_and_salt(&password) else {
+            tracing::error!("Hash and salt were not able to be created, registration error");
+            return false;
+        };
         let query = format!(
             "
                     insert into login(email, password, salt, isdoctor) values ('{}', '{}', '{}', {})
@@ -249,7 +258,10 @@ impl Database {
         status: &String,
         prescription: &String,
     ) -> bool {
-        let naivedatetime = NaiveDateTime::parse_from_str(datetime, "%Y-%m-%d %H:%M:%S").unwrap();
+        let Ok(naivedatetime) = NaiveDateTime::parse_from_str(datetime, "%Y-%m-%d %H:%M:%S") else {
+            tracing::error!("Couldn't parse date time into NaiveDateTime");
+            return false;
+        };
         let query = format!("
                     insert into appointments (doctor_id, patient_id, appointment_type, date_time, type, status, prescription) values ({},{},{},'{}','{}','{}', '{}')
                             ", docid, patid, apptype, naivedatetime, phyorvirt, status, prescription);
@@ -272,12 +284,14 @@ impl Database {
             .await
         {
             Ok(result) => {
-                let check = argon_hash_password::check_password_matches_hash(
+                let Ok(check) = argon_hash_password::check_password_matches_hash(
                     password,
                     &result.hashedpass,
                     &result.salt,
-                )
-                .unwrap();
+                ) else {
+                    tracing::debug!("Couldn't check password matches hash");
+                    return None;
+                };
                 if check {
                     let mut tablename = "patients";
                     if result.isdoctor {
@@ -289,23 +303,29 @@ impl Database {
                                 ",
                         tablename, email
                     );
-                    let id: i64 = sqlx::query(&query)
+                    let Ok(queryres) = sqlx::query(&query)
                         .fetch_one(&self.connection)
-                        .await
-                        .expect("Error in database")
-                        .try_get("id")
-                        .unwrap();
+                        .await else {
+                            tracing::error!("Error while checking login details in database");
+                            return None;
+                        };
+                    let Ok(id): Result<i64, _> = queryres.try_get("id") else {
+                        tracing::error!("Error while retrieving id from query result");
+                        return None;
+                    };
                     let jwt = InternalJWT {
                         isdoctor: result.isdoctor,
                         id: id.to_string(),
                         exp: 1000000,
                     };
-                    let token = encode(
+                    let Ok(token) = encode(
                         &Header::default(),
                         &jwt,
                         &EncodingKey::from_secret(&self.jwt_secret),
-                    )
-                    .unwrap();
+                    ) else {
+                        tracing::debug!("Error while trying to encode JWT");
+                        return None;
+                    };
                     Some(token)
                 } else {
                     None
@@ -337,7 +357,10 @@ impl Database {
             &validation,
         ) {
             Ok(token) => {
-                let id: i64 = token.claims.id.parse().unwrap();
+                let Ok(id): Result<i64, _> = token.claims.id.parse() else {
+                    tracing::error!("Could not parse id while verifiying JWT");
+                    return None;
+                };
                 let res = JWT {
                     isdoctor: token.claims.isdoctor,
                     id,
