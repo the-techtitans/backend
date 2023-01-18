@@ -16,3 +16,4 @@ dotenvy = "0.15.6"
 chrono = "0.4"
 jsonwebtoken = "8.2.0"
 argon_hash_password = "0.1.0"
+tower-http = { version = "0.3.0", features = ["cors"] }

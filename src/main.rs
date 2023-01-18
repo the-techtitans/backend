@@ -1,8 +1,8 @@
 use axum::{
     extract::Query,
     http::{
-        header::{HeaderMap, AUTHORIZATION},
-        StatusCode,
+        header::{HeaderMap, ACCEPT, AUTHORIZATION},
+        Method, StatusCode,
     },
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -11,6 +11,7 @@ use axum::{
 use db_structs::*;
 use std::net::SocketAddr;
 use tokio;
+use tower_http::cors::{Any, CorsLayer};
 use tracing;
 use tracing_subscriber;
 
@@ -44,7 +45,11 @@ async fn authenticate(
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_headers(Any)
+        .expose_headers(Any)
+        .allow_methods([Method::GET, Method::POST]);
     let app = Router::new()
         .route("/", get(root))
         .route("/prevapp", post(prevapp))
@@ -55,7 +60,8 @@ async fn main() {
         .route("/newpatient", post(newpatient))
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
-        .route("/specialities", get(specialities));
+        .route("/specialities", get(specialities))
+        .layer(cors);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", addr);
