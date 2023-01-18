@@ -24,8 +24,12 @@ async fn authenticate(
     given_id: &i64,
     isdoctor: bool,
 ) -> bool {
-    let Ok(rawjwt) = headers[AUTHORIZATION].to_str() else {
+    let Some(entry) = headers.get(AUTHORIZATION) else {
         tracing::error!("No JWT given in request, denying access..");
+        return false;
+    };
+    let Ok(rawjwt) = entry.to_str() else {
+        tracing::error!("JWT can't be parsed, denying access..");
         return false;
     };
     match conn.verify_jwt(rawjwt) {
@@ -85,22 +89,29 @@ async fn prescriptions(headers: HeaderMap, Json(payload): Json<PatientID>) -> Re
         "Got request to view previous appointments for patient ID {}",
         payload.patient_id
     );
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => {
             if authenticate(&conn, headers, &payload.patient_id, false).await {
                 let res = conn.view_prescriptions(payload.patient_id).await;
                 res
             } else {
+                code = StatusCode::UNAUTHORIZED;
                 let res: Vec<Prescriptions> = Vec::new();
                 res
             }
         }
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<Prescriptions> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code,Json(res)).into_response()
+
 }
 
 async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
@@ -108,34 +119,45 @@ async fn prevapp(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response
         "Got request to view previous appointments for patient ID {}",
         payload.patient_id
     );
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => {
             if authenticate(&conn, headers, &payload.patient_id, false).await {
                 let res = conn.view_prev_appointments(payload.patient_id).await;
                 res
             } else {
+                code = StatusCode::UNAUTHORIZED;
                 let res: Vec<PrevAppointments> = Vec::new();
                 res
             }
         }
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<PrevAppointments> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code,Json(res)).into_response()
 }
 
 async fn doctors(Json(payload): Json<City>) -> Response {
     tracing::debug!("Got request to view doctors in city {}", payload.city);
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => conn.view_same_city_doctors(payload.city).await,
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<DoctorInfo> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code,Json(res)).into_response()
 }
 
 async fn patient(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response {
@@ -143,21 +165,27 @@ async fn patient(headers: HeaderMap, Json(payload): Json<PatientID>) -> Response
         "Got request to view patient info corresponding to patient ID {}",
         payload.patient_id
     );
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => {
             if authenticate(&conn, headers, &payload.patient_id, false).await {
                 conn.view_patient_info(payload.patient_id).await
             } else {
+                code = StatusCode::UNAUTHORIZED;
                 let res: Vec<PatientInfo> = Vec::new();
                 res
             }
         }
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<PatientInfo> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code,Json(res)).into_response()
 }
 
 async fn find(payload: Query<CityApptype>) -> Response {
@@ -166,17 +194,22 @@ async fn find(payload: Query<CityApptype>) -> Response {
         payload.apptype,
         payload.city
     );
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => {
             conn.view_doctor_prices(&payload.city, &payload.apptype)
                 .await
         }
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<DoctorPrices> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    (code,Json(res)).into_response()
 }
 
 async fn newpatient(Json(payload): Json<Patient>) -> Response {
@@ -197,7 +230,7 @@ async fn newpatient(Json(payload): Json<Patient>) -> Response {
             }
         }
         None => {
-            return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
         }
     }
 }
@@ -225,7 +258,7 @@ async fn newdoctor(Json(payload): Json<Doctor>) -> Response {
             }
         }
         None => {
-            return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
         }
     }
 }
@@ -258,21 +291,26 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
             }
         }
         None => {
-            return (StatusCode::BAD_REQUEST, Json("Error while inserting")).into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while inserting")).into_response();
         }
     }
 }
 
 async fn specialities() -> Response {
     tracing::debug!("Got request to fetch specialities");
+    let mut code = StatusCode::OK;
     let res = match database::init().await {
         Some(conn) => conn.view_specialities().await,
         None => {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
             let res: Vec<Specialities> = Vec::new();
             res
         }
     };
-    Json(res).into_response()
+    if res.is_empty() && code == StatusCode::OK {
+        code = StatusCode::BAD_REQUEST;
+    }
+    return (code,Json(res)).into_response();
 }
 
 async fn login(Json(payload): Json<Login>) -> Response {
@@ -292,7 +330,7 @@ async fn login(Json(payload): Json<Login>) -> Response {
             }
         }
         None => {
-            return (StatusCode::BAD_REQUEST, Json("Error while logging in")).into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json("Error while logging in")).into_response();
         }
     }
 }
