@@ -31,7 +31,7 @@ pub async fn init() -> Option<Database> {
                                 connection: pool,
                                 jwt_secret: sec.as_bytes().to_vec(),
                             });
-                        },
+                        }
                         Err(e) => {
                             tracing::error!("Could not connect using URL {}", url);
                             tracing::error!("Error: {}", e);
@@ -209,47 +209,54 @@ impl Database {
                 ",
             email
         );
-        let result = sqlx::query_as::<_, LoginTable>(&query)
+        match sqlx::query_as::<_, LoginTable>(&query)
             .fetch_one(&self.connection)
             .await
-            .expect("Error in database");
-        let check = argon_hash_password::check_password_matches_hash(
-            password,
-            &result.hashedpass,
-            &result.salt,
-        )
-        .unwrap();
-        if check {
-            let mut tablename = "patients";
-            if result.isdoctor {
-                tablename = "doctors";
-            }
-            let query = format!(
-                "
-                        select id from {} where email = '{}';
-                    ",
-                tablename, email
-            );
-            let id: i64 = sqlx::query(&query)
-                .fetch_one(&self.connection)
-                .await
-                .expect("Error in database")
-                .try_get("id")
+        {
+            Ok(result) => {
+                let check = argon_hash_password::check_password_matches_hash(
+                    password,
+                    &result.hashedpass,
+                    &result.salt,
+                )
                 .unwrap();
-            let jwt = InternalJWT {
-                isdoctor: result.isdoctor,
-                id: id.to_string(),
-                exp: 1000000,
-            };
-            let token = encode(
-                &Header::default(),
-                &jwt,
-                &EncodingKey::from_secret(&self.jwt_secret),
-            )
-            .unwrap();
-            Some(token)
-        } else {
-            None
+                if check {
+                    let mut tablename = "patients";
+                    if result.isdoctor {
+                        tablename = "doctors";
+                    }
+                    let query = format!(
+                        "
+                                    select id from {} where email = '{}';
+                                ",
+                        tablename, email
+                    );
+                    let id: i64 = sqlx::query(&query)
+                        .fetch_one(&self.connection)
+                        .await
+                        .expect("Error in database")
+                        .try_get("id")
+                        .unwrap();
+                    let jwt = InternalJWT {
+                        isdoctor: result.isdoctor,
+                        id: id.to_string(),
+                        exp: 1000000,
+                    };
+                    let token = encode(
+                        &Header::default(),
+                        &jwt,
+                        &EncodingKey::from_secret(&self.jwt_secret),
+                    )
+                    .unwrap();
+                    Some(token)
+                } else {
+                    None
+                }
+            }
+            Err(_) => {
+                tracing::debug!("No such user found!");
+                None
+            }
         }
     }
 
