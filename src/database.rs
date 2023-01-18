@@ -134,7 +134,7 @@ impl Database {
 
         let query = format!(
             "
-                    select d.doctor_id as docid, d.name as docname, d.city as city, d.address as address, t.name as apptype, p.price
+                    select d.id as docid, d.name as docname, d.city as city, d.address as address, t.name as apptype, p.price
                     from doctors d
                     join appointment_types t on d.speciality_id = t.speciality_id
                     join appointment_prices p on d.id = p.doctor_id and t.id = p.appointment_type
@@ -165,7 +165,7 @@ impl Database {
 
     pub async fn view_cities(&self) -> Vec<Cities> {
         let query = String::from(
-            "select distinct(city) from doctors;"
+            "select distinct(city) as city from doctors"
         );
         self.get_query_result::<Cities, Postgres>(&query)
             .await
