@@ -3,7 +3,7 @@ use argon_hash_password;
 use chrono::NaiveDateTime;
 use dotenvy::dotenv;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row, postgres::PgRow};
+use sqlx::{postgres::PgPoolOptions, postgres::PgRow, Pool, Postgres, Row};
 use std::env;
 use tracing;
 
@@ -42,20 +42,18 @@ pub async fn init() -> Option<Database> {
 }
 
 impl Database {
-
     async fn get_query_result<ResultStruct, DB>(&self, query: &String) -> Vec<ResultStruct>
-        where ResultStruct: for<'r> sqlx::FromRow<'r, <DB as sqlx::Database>::Row>,
+    where
+        ResultStruct: for<'r> sqlx::FromRow<'r, <DB as sqlx::Database>::Row>,
         ResultStruct: Unpin,
         ResultStruct: Send,
         DB: sqlx::Database<Row = PgRow>,
     {
-        match sqlx::query_as::<_,ResultStruct>(&query)
+        match sqlx::query_as::<_, ResultStruct>(&query)
             .fetch_all(&self.connection)
             .await
         {
-            Ok(result) => {
-                result
-            },
+            Ok(result) => result,
             Err(_) => {
                 tracing::error!("Error while running query");
                 let empty: Vec<ResultStruct> = Vec::new();
@@ -78,7 +76,8 @@ impl Database {
                     where a.patient_id = {}
                     order by timestamp desc)
                     ;", patient_id, patient_id);
-        self.get_query_result::<Prescriptions, Postgres>(&query).await
+        self.get_query_result::<Prescriptions, Postgres>(&query)
+            .await
     }
 
     pub async fn view_prev_appointments(&self, patient_id: i64) -> Vec<PrevAppointments> {
@@ -97,8 +96,9 @@ impl Database {
                     where a.patient_id = {}
                     order by timestamp desc)
                     ;", patient_id, patient_id);
-        self.get_query_result::<PrevAppointments, Postgres>(&query).await
-}
+        self.get_query_result::<PrevAppointments, Postgres>(&query)
+            .await
+    }
 
     pub async fn view_same_city_doctors(&self, city: String) -> Vec<DoctorInfo> {
         let query = format!("
@@ -142,13 +142,17 @@ impl Database {
                     ",
             isapptypespecified, iscityspecified
         );
-        self.get_query_result::<DoctorPrices, Postgres>(&query).await
+        self.get_query_result::<DoctorPrices, Postgres>(&query)
+            .await
     }
 
     pub async fn view_specialities(&self) -> Vec<Specialities> {
-        let query = String::from("select id, name, description as desc
-                    from specialities;");
-        self.get_query_result::<Specialities, Postgres>(&query).await
+        let query = String::from(
+            "select id, name, description as desc
+                    from specialities;",
+        );
+        self.get_query_result::<Specialities, Postgres>(&query)
+            .await
     }
 
     pub async fn register(&self, email: &String, password: &String, isdoctor: bool) -> bool {
