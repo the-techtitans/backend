@@ -38,7 +38,7 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/patient | POST | Displays info about patient | patient_id (POST request) | Yes
 |/newpatient | POST | Adds patient details to database | name, phone, email, password | Will be used for signup process
 |/specialities | GET | Gets speciality details | Nothing | No
-|/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address | Will be used for signup process
+|/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address, phone, email, password | Will be used for signup process
 |/newappointment | POST | Add new appointment to database | doctor_id, patient_id, apptype (as an ID), datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS), phyorvirt (just write either physical or virtual checkup), status (cancelled, fulfilled, scheduled), prescription | Yes
 |/login | POST | Generate JWT for a user (doctor or patient) | email, password | No (JWT is used as token to get authentication implemented)
 |/prescriptions | POST | Get the doctor name, date and time, and prescription text previously given | patient_id | Yes
