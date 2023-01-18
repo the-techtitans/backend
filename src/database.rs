@@ -62,11 +62,16 @@ impl Database {
                     where a.patient_id = {}
                     order by timestamp desc
                     ;", patient_id);
-        let result = sqlx::query_as::<_, PrevAppointments>(&query)
+        match sqlx::query_as::<_, PrevAppointments>(&query)
             .fetch_all(&self.connection)
-            .await
-            .expect("Error in database");
-        result
+            .await {
+                Ok(result) => result,
+                Err(_) => {
+                    tracing::error!("Error while viewing previous appointments");
+                    let empty : Vec<PrevAppointments> = Vec::new();
+                    empty
+                }
+            }
     }
 
     pub async fn view_same_city_doctors(&self, city: String) -> Vec<DoctorInfo> {
@@ -76,11 +81,16 @@ impl Database {
                     join specialities s on s.id = d.speciality_id
                     where d.city = '{}'
                     ;", city);
-        let result = sqlx::query_as::<_, DoctorInfo>(&query)
+        match sqlx::query_as::<_, DoctorInfo>(&query)
             .fetch_all(&self.connection)
-            .await
-            .expect("Error in database");
-        result
+            .await {
+                Ok(result) => result,
+                Err(_) => {
+                    tracing::error!("Error while viewing doctors");
+                    let empty : Vec<DoctorInfo> = Vec::new();
+                    empty
+                }
+            }
     }
 
     pub async fn view_patient_info(&self, patient_id: i64) -> Vec<PatientInfo> {
@@ -92,11 +102,16 @@ impl Database {
                     ;",
             patient_id
         );
-        let result = sqlx::query_as::<_, PatientInfo>(&query)
+        match sqlx::query_as::<_, PatientInfo>(&query)
             .fetch_all(&self.connection)
-            .await
-            .expect("Error in database");
-        result
+            .await {
+                Ok(result) => result,
+                Err(_) => {
+                    tracing::error!("Error while viewing patient info");
+                    let empty : Vec<PatientInfo> = Vec::new();
+                    empty
+                }
+            }
     }
 
     pub async fn view_doctor_prices(&self, city: &String, apptype: &String) -> Vec<DoctorPrices> {
@@ -119,11 +134,16 @@ impl Database {
                     ",
             isapptypespecified, iscityspecified
         );
-        let result = sqlx::query_as::<_, DoctorPrices>(&query)
+        match sqlx::query_as::<_, DoctorPrices>(&query)
             .fetch_all(&self.connection)
-            .await
-            .expect("Error in database");
-        result
+            .await {
+                Ok(result) => result,
+                Err(_) => {
+                    tracing::error!("Error while viewing doctors and prices");
+                    let empty : Vec<DoctorPrices> = Vec::new();
+                    empty
+                }
+            }
     }
 
     pub async fn view_specialities(&self) -> Vec<Specialities> {
