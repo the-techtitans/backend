@@ -119,9 +119,9 @@ pub struct DoctorAppointments {
     patient_id: i64,
     #[serde(deserialize_with = "from_str")]
     apptype: i64,
-    datetime: String,
+    pub datetime: String,
     phyorvirt: String,
-    status: String,
+    pub status: String,
     prescription: String,
 }
 
