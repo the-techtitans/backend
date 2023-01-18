@@ -61,7 +61,14 @@ impl Database {
                     join specialities p on p.id = a.appointment_type
                     where a.patient_id = {}
                     order by timestamp desc
-                    ;", patient_id);
+                    UNION
+                    select d.name as docname, TO_CHAR(a.date_time, 'YYYY-MM-DD HH24:MM:SS') as timestamp, a.type as apptype, a.status as appstatus, a.prescription as prescription, p.name as appname
+                    from appointments a
+                    join doctors d on d.id = a.doctor_id
+                    join specialities p on p.id = a.appointment_type
+                    where a.patient_id = {}
+                    order by timestamp desc
+                    ;", patient_id, patient_id);
         match sqlx::query_as::<_, PrevAppointments>(&query)
             .fetch_all(&self.connection)
             .await {
