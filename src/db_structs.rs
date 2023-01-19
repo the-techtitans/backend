@@ -109,6 +109,7 @@ pub struct DoctorPrices {
     city: String,
     address: String,
     apptype: String,
+    appid: i64,
     price: i32,
 }
 
