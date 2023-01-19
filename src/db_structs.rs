@@ -130,9 +130,9 @@ pub struct DoctorAppointments {
     #[serde(deserialize_with = "from_str")]
     id: i64,
     #[serde(deserialize_with = "from_str")]
-    patient_id: i64,
+    patient_id: i32,
     #[serde(deserialize_with = "from_str")]
-    apptype: i64,
+    apptype: i32,
     pub datetime: String,
     phyorvirt: String,
     pub status: String,
