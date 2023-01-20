@@ -42,6 +42,7 @@ Then, run the project using ```cargo run```. It will run on port 3000. For log m
 |/cities | GET | Gets all cities where doctors are available according to us | Nothing | No
 |/newdoctor | POST | Adds doctor details to database | name, speciality (as an ID), city, address, phone, email, password | Will be used for signup process
 |/newappointment | POST | Add new appointment to database | doctor_id, patient_id, apptype (as an ID), datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS), phyorvirt (just write either physical or virtual checkup), status (cancelled, fulfilled, scheduled), prescription | Yes
+|/cancelappointment | POST | Cancel a previously booked appointment | doctor_id, patient_id, datetime (specific format of YYYY-MM-DD and then 24 hour HH:MM:SS) | Yes
 |/login | POST | Generate JWT for a user (doctor or patient) | email, password | No (JWT is used as token to get authentication implemented)
 |/prescriptions | POST | Get the doctor name, date and time, and prescription text previously given | patient_id | Yes
 |/doctorappointments | POST | Gets the doctor's appointments | patient_id (it recycles the same struct so just name it as such, it is interpreted as a doctor's ID only) | Yes
