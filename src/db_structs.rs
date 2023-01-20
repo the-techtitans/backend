@@ -63,6 +63,15 @@ pub struct Appointment {
 }
 
 #[derive(Deserialize)]
+pub struct CancelAppointment {
+    #[serde(deserialize_with = "from_str")]
+    pub doctor_id: i64,
+    #[serde(deserialize_with = "from_str")]
+    pub patient_id: i64,
+    pub datetime: String,
+}
+
+#[derive(Deserialize)]
 pub struct Registration {
     pub email: String,
     pub password: String,

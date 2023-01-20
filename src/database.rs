@@ -260,6 +260,16 @@ impl Database {
         }
     }
 
+    pub async fn cancel_appointment(&self, docid: i64, patid: i64, datetime: &String) -> bool {
+        let query = format!("
+                    update appointments set status = 'cancelled' where doctor_id = {} and patient_id = {} and TO_CHAR(date_time, 'YYYY-MM-DD HH24:MI:SS') = '{}';
+                            ", docid, patid, datetime);
+        match sqlx::query(&query).execute(&self.connection).await {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
     //tries to find patient/doctor logging in with credentials and gives JWT if successful
     pub async fn login(&self, email: &String, password: &String) -> Option<String> {
         let query = format!(

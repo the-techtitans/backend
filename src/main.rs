@@ -69,6 +69,7 @@ async fn main() {
         .route("/newpatient", post(newpatient))
         .route("/newdoctor", post(newdoctor))
         .route("/newappointment", post(newappointment))
+        .route("/cancelappointment", post(cancelappointment))
         .route("/specialities", get(specialities))
         .route("/cities", get(cities))
         .route("/apptypes", get(apptypes))
@@ -338,6 +339,39 @@ async fn newappointment(headers: HeaderMap, Json(payload): Json<Appointment>) ->
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json("Error while inserting"),
+            )
+                .into_response();
+        }
+    }
+}
+
+async fn cancelappointment(headers: HeaderMap, Json(payload): Json<CancelAppointment>) -> Response {
+    tracing::debug!("Got request to cancel appointment");
+    match database::init().await {
+        Some(conn) => {
+            if authenticate(&conn, headers, &payload.patient_id, false).await {
+                let res = conn
+                    .cancel_appointment(
+                        payload.doctor_id,
+                        payload.patient_id,
+                        &payload.datetime,
+                    )
+                    .await;
+                if res {
+                    tracing::debug!("Record updated successfully");
+                    return (StatusCode::OK, Json("Cancelled")).into_response();
+                } else {
+                    return (StatusCode::BAD_REQUEST, Json("Error while cancelling"))
+                        .into_response();
+                }
+            } else {
+                return (StatusCode::BAD_REQUEST, Json("Error while cancelling")).into_response();
+            }
+        }
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Error while cancelling"),
             )
                 .into_response();
         }
